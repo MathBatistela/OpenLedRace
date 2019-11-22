@@ -57,6 +57,7 @@ float speed2=0;
 float dist1=0;
 float dist2=0;
 
+// contador de voltas dos players 1 e 2
 byte loop1=0;
 byte loop2=0;
 
@@ -87,24 +88,48 @@ void writeScoreBoardLCD(){
 	//Limpa a tela
 	lcd.clear();
 
-	// escrevendo a estrutura do placar
+	// escrevendo a estrutura do placar (coluna, linha)
+
+	// escrevendo players
 	lcd.setCursor(0, 0);
+	lcd.print("P");
+	lcd.setCursor(1, 0);
 	lcd.print("1");
 
-	lcd.setCursor(1, 0);
+	lcd.setCursor(0, 1);
+	lcd.print("P");
+	lcd.setCursor(1, 1);
+	lcd.print("2");
+
+	// voltas
+	lcd.setCursor(4, 0);
 	lcd.print("V");
-	
-	lcd.setCursor(3, 0);
+	lcd.setCursor(4, 1);
+	lcd.print("V");
+
+	lcd.setCursor(6, 0);
+	lcd.print(loop1);
+	lcd.setCursor(6, 1);
+	lcd.print(loop2);
+
+	// tempo
+	lcd.setCursor(8, 0);
+	lcd.print("T");
+	lcd.setCursor(8, 1);
 	lcd.print("T");
 
-	lcd.setCursor(8, 0);
-	lcd.print("2");
-	
-	lcd.setCursor(9, 0);
-	lcd.print("V");
-	
-	lcd.setCursor(11, 0);
+	lcd.setCursor(10, 0);
 	lcd.print("T");
+	lcd.setCursor(10, 1);
+	lcd.print("T");
+}
+
+// atualiza as voltas no placar
+void updateTurn(int line, byte turn){
+	
+	lcd.setCursor(6, line);
+	lcd.print(turn);
+
 }
 
 // ----------------------------------------------------------------------------------
@@ -176,30 +201,44 @@ void start_race(){
 	};
 
 	track.show();
+
 	delay(2000);
+
 	track.setPixelColor(12, track.Color(0,255,0));
 	track.setPixelColor(11, track.Color(0,255,0));
 	track.show();
+
 	tone(PIN_AUDIO,400);
+
 	delay(2000);
-	noTone(PIN_AUDIO);                  
+
+	noTone(PIN_AUDIO);
+
 	track.setPixelColor(12, track.Color(0,0,0));
 	track.setPixelColor(11, track.Color(0,0,0));
 	track.setPixelColor(10, track.Color(255,255,0));
 	track.setPixelColor(9, track.Color(255,255,0));
 	track.show();
+
 	tone(PIN_AUDIO,600);
+
 	delay(2000);
-	noTone(PIN_AUDIO);                  
+
+	noTone(PIN_AUDIO);    
+
 	track.setPixelColor(9, track.Color(0,0,0));
 	track.setPixelColor(10, track.Color(0,0,0));
 	track.setPixelColor(8, track.Color(255,0,0));
 	track.setPixelColor(7, track.Color(255,0,0));
 	track.show();
+
 	tone(PIN_AUDIO,1200);
+
 	delay(2000);
-	noTone(PIN_AUDIO);                               
-	timestamp=0;              
+
+	noTone(PIN_AUDIO);     
+
+	timestamp = 0;              
 };
 
 // ----------------------------------------------------------------------------------
@@ -283,12 +322,18 @@ void loop() {
 	};
       
     if (dist1 > NPIXELS * loop1) {
-		loop1++;
+		loop1++;							// incrementando a volta do player 1
+		
+		updateTurn(0, loop1);				// atualizando as voltas no LCD
+
 		tone(PIN_AUDIO, 600);
 		TBEEP = 2;
 	};
     if (dist2 > NPIXELS * loop2) {
-		loop2++;
+		loop2++;							// incrementando a volta do player 2
+
+		updateTurn(1, loop2);				// atualizando as voltas no LCD
+
 		tone(PIN_AUDIO, 700);
 		TBEEP = 2;
 	};
@@ -331,7 +376,7 @@ void loop() {
 		start_race();
 	};
 
-    if ((millis() & 512) == (512*draworder)) {
+    if ((millis() & 512) == (512 * draworder)) {
 		if (draworder==0) {
 			draworder=1;
 		}
@@ -340,7 +385,7 @@ void loop() {
 		}   
 	}; 
 
-    if (draworder==0) {
+    if (draworder == 0) {
 		draw_car1();
 		draw_car2();
 	}
@@ -352,10 +397,10 @@ void loop() {
     track.show(); 
     delay(tdelay);
     
-    if (TBEEP>0) {
-		TBEEP-=1;
+    if (TBEEP > 0) {
+		TBEEP -= 1;
 		// conflito de lib !!!! interrupção por neopixel
-		if (TBEEP==0) {
+		if (TBEEP == 0) {
 			noTone(PIN_AUDIO);
 		}; 
 	};   
