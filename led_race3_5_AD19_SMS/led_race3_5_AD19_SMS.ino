@@ -79,9 +79,13 @@ int tdelay = 5;
 // escreve a estrutura do placar no LCD
 void writeScoreBoardLCD(){
 
+	// iniciando o LCD 16x2
+	lcd.begin(16, 2);
+
 	//Limpa a tela
 	lcd.clear();
-	//Posiciona o cursor na coluna 3, linha 0;
+
+	// escrevendo a estrutura do placar
 	lcd.setCursor(0, 0);
 	lcd.print("1");
 
