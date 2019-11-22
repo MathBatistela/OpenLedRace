@@ -14,9 +14,7 @@
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 3 of the License, or
  (at your option) any later version.
-
  by gbarbarov@singulardevices.com  for Arduino day Seville 2019 
-
  Code made dirty and fast, next improvements in: 
  https://github.com/gbarbarov/led-race
  https://www.hackster.io/gbarbarov/open-led-race-a0331a
@@ -41,9 +39,9 @@ int NPIXELS = MAXLED; // leds on track
 #define COLOR2    track.Color(0,255,0)
 
 int win_music[] = {
-	2637, 2637, 0, 2637, 
-  	0, 2093, 2637, 0,
-  	3136    
+  2637, 2637, 0, 2637, 
+    0, 2093, 2637, 0,
+    3136    
 };
 
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -62,7 +60,7 @@ byte loop1=0;
 byte loop2=0;
 
 byte leader=0;
-byte loop_max=5; //total laps race
+byte loop_max=2; //total laps race
 
 
 float ACEL=0.2;
@@ -82,326 +80,314 @@ int tdelay = 5;
 // escreve a estrutura do placar no LCD
 void writeScoreBoardLCD(){
 
-	// iniciando o LCD 16x2
-	lcd.begin(16, 2);
+  // iniciando o LCD 16x2
+  lcd.begin(16, 2);
 
-	//Limpa a tela
-	lcd.clear();
+  //Limpa a tela
+  lcd.clear();
 
-	// escrevendo a estrutura do placar (coluna, linha)
+  // escrevendo a estrutura do placar (coluna, linha)
 
-	// escrevendo players
-	lcd.setCursor(0, 0);
-	lcd.print("P");
-	lcd.setCursor(1, 0);
-	lcd.print("1");
+  // escrevendo players
+  lcd.setCursor(0, 0);
+  lcd.print("P");
+  lcd.setCursor(1, 0);
+  lcd.print("1");
 
-	lcd.setCursor(0, 1);
-	lcd.print("P");
-	lcd.setCursor(1, 1);
-	lcd.print("2");
+  lcd.setCursor(0, 1);
+  lcd.print("P");
+  lcd.setCursor(1, 1);
+  lcd.print("2");
 
-	// voltas
-	lcd.setCursor(4, 0);
-	lcd.print("V");
-	lcd.setCursor(4, 1);
-	lcd.print("V");
+  // voltas
+  lcd.setCursor(4, 0);
+  lcd.print("V");
+  lcd.setCursor(4, 1);
+  lcd.print("V");
 
-	lcd.setCursor(6, 0);
-	lcd.print(loop1);
-	lcd.setCursor(6, 1);
-	lcd.print(loop2);
+  lcd.setCursor(6, 0);
+  lcd.print(loop1);
+  lcd.setCursor(6, 1);
+  lcd.print(loop2);
 
-	// tempo
-	lcd.setCursor(8, 0);
-	lcd.print("T");
-	lcd.setCursor(8, 1);
-	lcd.print("T");
+  // tempo
+  lcd.setCursor(8, 0);
+  lcd.print("T");
+  lcd.setCursor(8, 1);
+  lcd.print("T");
 
-	lcd.setCursor(10, 0);
-	lcd.print("T");
-	lcd.setCursor(10, 1);
-	lcd.print("T");
+  lcd.setCursor(10, 0);
+  lcd.print("T");
+  lcd.setCursor(10, 1);
+  lcd.print("T");
 }
 
 // atualiza as voltas no placar
 void updateTurn(int line, byte turn){
-	
-	lcd.setCursor(6, line);
-	lcd.print(turn);
+  
+  lcd.setCursor(6, line);
+  lcd.print(turn);
 
 }
 
 // ----------------------------------------------------------------------------------
 void set_ramp(byte H, byte a, byte b, byte c){
 
-	// Gravidade de subida entre o começo e o topo da rampa
- 	for(int i = 0; i < (b - a); i++){
-		gravity_map[a + i] = 127 - i * ((float)H / (b - a));
-	};
+  // Gravidade de subida entre o começo e o topo da rampa
+  for(int i = 0; i < (b - a); i++){
+    gravity_map[a + i] = 127 - i * ((float)H / (b - a));
+  };
 
-	// Gravidade no topo da rampa
-  	gravity_map[b] = 127; 
-	
-	// Gravidade de decida entre o topo da rampa e o fim da rampa
-  	for(int i = 0; i < (c - b); i++){
-		gravity_map[b + i + 1] = 127 + H - i * ((float)H / (c - b));
-	};
+  // Gravidade no topo da rampa
+    gravity_map[b] = 127; 
+  
+  // Gravidade de decida entre o topo da rampa e o fim da rampa
+    for(int i = 0; i < (c - b); i++){
+    gravity_map[b + i + 1] = 127 + H - i * ((float)H / (c - b));
+  };
 }
 
 // ----------------------------------------------------------------------------------
 void set_loop(byte H,byte a,byte b,byte c){
-  	for(int i=0;i<(b-a);i++){
-	  	gravity_map[a+i]=127-i*((float)H/(b-a));
-	  
-	};
-  	
-	gravity_map[b]=255; 
+    for(int i=0;i<(b-a);i++){
+      gravity_map[a+i]=127-i*((float)H/(b-a));
+    
+  };
+    
+  gravity_map[b]=255; 
 
-  	for(int i=0;i<(c-b);i++){
-		gravity_map[b+i+1]=127+H-i*((float)H/(c-b));
-	};
+    for(int i=0;i<(c-b);i++){
+    gravity_map[b+i+1]=127+H-i*((float)H/(c-b));
+  };
 }
 
 // ----------------------------------------------------------------------------------
 void setup() {
-	// iniciando a gravidade em todos os leds da pista
-  	for(int i = 0; i < NPIXELS; i++){
-  		gravity_map[i] = 127;
-  	};
-  	
-	track.begin(); 
-	// configurando os botões dos players 1 e 2
-  	pinMode(PIN_P1, INPUT_PULLUP); 
-  	pinMode(PIN_P2, INPUT_PULLUP);  
+  // iniciando a gravidade em todos os leds da pista
+    for(int i = 0; i < NPIXELS; i++){
+      gravity_map[i] = 127;
+    };
+    
+  track.begin(); 
+  // configurando os botões dos players 1 e 2
+    pinMode(PIN_P1, INPUT_PULLUP); 
+    pinMode(PIN_P2, INPUT_PULLUP);  
 
-	// Pressionar o botão do player 1 para configurar ua rampa
-  	if ((digitalRead(PIN_P1) == 0)){
-		// configurando uma rampa na pista, com o topo no 100 e com 10 leds de subida e 10 de subida
-    	set_ramp(12,90,100,110);
-    	
-		// colocar a cor na rampa
-		for(int i= 0; i < NPIXELS; i++){
-			track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
-		};
+  // Pressionar o botão do player 1 para configurar ua rampa
+    if ((digitalRead(PIN_P1) == 0)){
+    // configurando uma rampa na pista, com o topo no 100 e com 10 leds de subida e 10 de subida
+      set_ramp(12,90,100,110);
+      
+    // colocar a cor na rampa
+    for(int i= 0; i < NPIXELS; i++){
+      track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
+    };
 
-    	track.show();
-  	};
+      track.show();
+    };
 
-	// escreve o placar no LCD
-	writeScoreBoardLCD();
-	// começa a corrida
-  	start_race();    
+  // escreve o placar no LCD
+  writeScoreBoardLCD();
+  // começa a corrida
+    start_race();    
 }
 
 // ----------------------------------------------------------------------------------
 void start_race(){
-	for(int i = 0; i < NPIXELS; i++){
-		track.setPixelColor(i, track.Color(0,0,0));
-	};
+  for(int i = 0; i < NPIXELS; i++){
+    track.setPixelColor(i, track.Color(0,0,0));
+  };
 
-	track.show();
+  track.show();
 
-	delay(2000);
+  delay(2000);
 
-	track.setPixelColor(12, track.Color(0,255,0));
-	track.setPixelColor(11, track.Color(0,255,0));
-	track.show();
+  track.setPixelColor(12, track.Color(255,0,0));
+  track.setPixelColor(11, track.Color(255,0,0));
+  track.show();
 
-	tone(PIN_AUDIO,400);
+  tone(PIN_AUDIO,400);
 
-	delay(2000);
+  delay(2000);
 
-	noTone(PIN_AUDIO);
+  noTone(PIN_AUDIO);
 
-	track.setPixelColor(12, track.Color(0,0,0));
-	track.setPixelColor(11, track.Color(0,0,0));
-	track.setPixelColor(10, track.Color(255,255,0));
-	track.setPixelColor(9, track.Color(255,255,0));
-	track.show();
+  track.setPixelColor(12, track.Color(0,0,0));
+  track.setPixelColor(11, track.Color(0,0,0));
+  track.setPixelColor(10, track.Color(255,255,0));
+  track.setPixelColor(9, track.Color(255,255,0));
+  track.show();
 
-	tone(PIN_AUDIO,600);
+  tone(PIN_AUDIO,600);
 
-	delay(2000);
+  delay(2000);
 
-	noTone(PIN_AUDIO);    
+  noTone(PIN_AUDIO);    
 
-	track.setPixelColor(9, track.Color(0,0,0));
-	track.setPixelColor(10, track.Color(0,0,0));
-	track.setPixelColor(8, track.Color(255,0,0));
-	track.setPixelColor(7, track.Color(255,0,0));
-	track.show();
+  track.setPixelColor(9, track.Color(0,0,0));
+  track.setPixelColor(10, track.Color(0,0,0));
+  track.setPixelColor(8, track.Color(0,255,0));
+  track.setPixelColor(7, track.Color(0,255,0));
+  track.show();
 
-	tone(PIN_AUDIO,1200);
+  tone(PIN_AUDIO,1200);
 
-	delay(2000);
+  delay(2000);
 
-	noTone(PIN_AUDIO);     
+  noTone(PIN_AUDIO);     
 
-	timestamp = 0;              
+  timestamp = 0;              
 };
 
 // ----------------------------------------------------------------------------------
 void winner_fx(){
-	int msize = sizeof(win_music) / sizeof(int);
-	
-	for (int note = 0; note < msize; note++) {
-		tone(PIN_AUDIO, win_music[note], 200);
-		delay(230);
-		noTone(PIN_AUDIO);
-	}                                             
+  int msize = sizeof(win_music) / sizeof(int);
+  
+  for (int note = 0; note < msize; note++) {
+    tone(PIN_AUDIO, win_music[note], 200);
+    delay(230);
+    noTone(PIN_AUDIO);
+  }                                             
 };
 
 // ----------------------------------------------------------------------------------
 void draw_car1(void){
-	for(int i = 0; i <= loop1; i++){
-		track.setPixelColor( ((word)dist1 % NPIXELS) + i, track.Color(0, 255 - i * 20, 0) );
-	};                   
+  for(int i = 0; i <= loop1; i++){
+    track.setPixelColor( ((word)dist1 % NPIXELS) + i, track.Color(0, 255 - i * 20, 0) );
+  };                   
 }
 
 // ----------------------------------------------------------------------------------
 void draw_car2(void){
-	for(int i = 0;i <= loop2; i++){
-		track.setPixelColor(((word)dist2 % NPIXELS) + i, track.Color(255 - i * 20, 0, 0));
-	};            
+  for(int i = 0;i <= loop2; i++){
+    track.setPixelColor(((word)dist2 % NPIXELS) + i, track.Color(255 - i * 20, 0, 0));
+  };            
 }
   
 // ----------------------------------------------------------------------------------
 void loop() {
     //for(int i=0;i<NPIXELS;i++){track.setPixelColor(i, track.Color(0,0,0));};
     for(int i = 0; i < NPIXELS; i++){
-		track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
-	};
+    track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
+  };
     
     if ( (flag_sw1 == 1) && (digitalRead(PIN_P1) == 0) ) {
-		flag_sw1 = 0;
-		speed1 += ACEL;
-	};
+    flag_sw1 = 0;
+    speed1 += ACEL;
+  };
 
     if ( (flag_sw1 == 0) && (digitalRead(PIN_P1) == 1) ) {
-		flag_sw1 = 1;
-	};
+    flag_sw1 = 1;
+  };
 
     if ( (gravity_map[(word)dist1 % NPIXELS]) < 127 ){
-		speed1 -= kg * (127 - (gravity_map[(word)dist1 % NPIXELS]));
-	}; 
+    speed1 -= kg * (127 - (gravity_map[(word)dist1 % NPIXELS]));
+  }; 
     
-	if ( (gravity_map[(word)dist1 % NPIXELS]) > 127){
-		speed1 += kg * ((gravity_map[(word)dist1 % NPIXELS]) - 127);
-	};
+  if ( (gravity_map[(word)dist1 % NPIXELS]) > 127){
+    speed1 += kg * ((gravity_map[(word)dist1 % NPIXELS]) - 127);
+  };
     
     
-    speed1 -= speed1 * kf; 
+  speed1 -= speed1 * kf; 
     
     if ( (flag_sw2 == 1) && (digitalRead(PIN_P2) == 0) ) {
-		flag_sw2 = 0;
-		speed2 += ACEL;
-	};
+    flag_sw2 = 0;
+    speed2 += ACEL;
+  };
     if ( (flag_sw2 == 0) && (digitalRead(PIN_P2) == 1) ) {
-		flag_sw2 = 1;
-	};
+    flag_sw2 = 1;
+  };
 
     if ( (gravity_map[(word)dist2 % NPIXELS]) < 127) {
-		speed2 -= kg * (127 - (gravity_map[(word)dist2 % NPIXELS]));
-	};
+    speed2 -= kg * (127 - (gravity_map[(word)dist2 % NPIXELS]));
+  };
 
     if ( (gravity_map[(word)dist2 % NPIXELS]) > 127) {
-		speed2 += kg * ((gravity_map[(word)dist2 % NPIXELS]) - 127);
-	};
+    speed2 += kg * ((gravity_map[(word)dist2 % NPIXELS]) - 127);
+  };
 
-    speed2 -= speed2 * kf; 
-        
-    dist1 += speed1;
-    dist2 += speed2;
-
-    if (dist1 > dist2) {
-		leader = 1;
-	}; 
-    if (dist2 > dist1) {
-		leader = 2;
-	};
+  speed2 -= speed2 * kf; 
       
-    if (dist1 > NPIXELS * loop1) {
-		loop1++;							// incrementando a volta do player 1
-		
-		updateTurn(0, loop1);				// atualizando as voltas no LCD
+  dist1 += speed1;
+  dist2 += speed2;
 
-		tone(PIN_AUDIO, 600);
-		TBEEP = 2;
-	};
-    if (dist2 > NPIXELS * loop2) {
-		loop2++;							// incrementando a volta do player 2
+  if (dist1 > dist2) {
+    leader = 1;
+  }; 
 
-		updateTurn(1, loop2);				// atualizando as voltas no LCD
+  if (dist2 > dist1) {
+    leader = 2;
+  };
+      
+  if (dist1 > NPIXELS * loop1) {
+    loop1++;              // incrementando a volta do player 1
+    
+    updateTurn(0, loop1);       // atualizando as voltas no LCD
 
-		tone(PIN_AUDIO, 700);
-		TBEEP = 2;
-	};
+    tone(PIN_AUDIO, 600);
+    TBEEP = 2;
+  };
 
-    if (loop1 > loop_max) {
-		for(int i = 0; i < NPIXELS; i++){
-			track.setPixelColor(i, track.Color(0, 255, 0));
-		}; 
-		
-		track.show();
-        winner_fx();
+  if (dist2 > NPIXELS * loop2) {
+    loop2++;              // incrementando a volta do player 2
 
-		loop1 = 0;
-		loop2 = 0;
-		dist1 = 0;
-		dist2 = 0;
-		speed1 = 0;
-		speed2 = 0;
-		timestamp = 0;
+    updateTurn(1, loop2);       // atualizando as voltas no LCD
 
-        start_race();
-    };
+    tone(PIN_AUDIO, 700);
+    TBEEP = 2;
+  };
 
-    if (loop2 > loop_max) {
-		for(int i = 0; i < NPIXELS; i++){
-			track.setPixelColor(i, track.Color(255, 0, 0));
-		}; 
-		
-		track.show();
-		winner_fx();
-		
-		loop1 = 0;
-		loop2 = 0;
-		dist1 = 0;
-		dist2 = 0;
-		speed1 = 0;
-		speed2 = 0;
-		timestamp = 0;
-		
-		start_race();
-	};
+  if (loop1 > loop_max && loop2 > loop_max) {
+    if (leader == 1){
+      for(int i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, track.Color(0, 255, 0));
+      }; 
+    }
+    else{
+      for(int i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, track.Color(255, 0, 0));
+      }; 
+    }
+  
+    track.show();
+    winner_fx();
+    loop1 = 0;
+    loop2 = 0;
+    dist1 = 0;
+    dist2 = 0;
+    speed1 = 0;
+    speed2 = 0;
+    timestamp = 0;
+    start_race();
+  };
 
-    if ((millis() & 512) == (512 * draworder)) {
-		if (draworder==0) {
-			draworder=1;
-		}
-		else {
-			draworder=0;
-		}   
-	}; 
+  if ((millis() & 512) == (512 * draworder)) {
+    if (draworder==0) {
+      draworder=1;
+    }
+    else {
+      draworder=0;
+    }   
+  }; 
 
-    if (draworder == 0) {
-		draw_car1();
-		draw_car2();
-	}
-	else {
-		draw_car2();
-		draw_car1();
-	}   
+  if (draworder == 0) {
+    if (loop1 <= loop_max) draw_car1();
+    if (loop2 <= loop_max) draw_car2();
+  }
+  else {
+    if (loop2 <= loop_max) draw_car2();
+    if (loop1 <= loop_max) draw_car1();
+  }   
                  
-    track.show(); 
-    delay(tdelay);
+  track.show(); 
+  delay(tdelay);
     
     if (TBEEP > 0) {
-		TBEEP -= 1;
-		// conflito de lib !!!! interrupção por neopixel
-		if (TBEEP == 0) {
-			noTone(PIN_AUDIO);
-		}; 
-	};   
+    TBEEP -= 1;
+    // conflito de lib !!!! interrupção por neopixel
+    if (TBEEP == 0) {
+      noTone(PIN_AUDIO);
+    }; 
+  };   
 }
