@@ -45,6 +45,8 @@ int win_music[] = {
   	0, 2093, 2637, 0,
   	3136    
 };
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
       
 byte  gravity_map[MAXLED];     
 
