@@ -35,8 +35,8 @@
 
 int NPIXELS = MAXLED; // leds on track
 
-#define COLOR1    track.Color(255,0,0)
-#define COLOR2    track.Color(0,255,0)
+#define COLOR1    track.Color(0,255,0)
+#define COLOR2    track.Color(255,0,0)
 
 int win_music[] = {
   2637, 2637, 0, 2637, 
@@ -242,6 +242,19 @@ void start_race(){
 // ----------------------------------------------------------------------------------
 void winner_fx(){
   int msize = sizeof(win_music) / sizeof(int);
+
+  if (leader == 1){
+    for(int i = 0; i < NPIXELS; i++){
+      track.setPixelColor(i, COLOR1);
+    }; 
+  }
+  else{
+    for(int i = 0; i < NPIXELS; i++){
+      track.setPixelColor(i, COLOR2);
+    }; 
+  }
+
+  track.show();
   
   for (int note = 0; note < msize; note++) {
     tone(PIN_AUDIO, win_music[note], 200);
@@ -339,18 +352,7 @@ void loop() {
   };
 
   if (loop1 > loop_max && loop2 > loop_max) {
-    if (leader == 1){
-      for(int i = 0; i < NPIXELS; i++){
-        track.setPixelColor(i, track.Color(0, 255, 0));
-      }; 
-    }
-    else{
-      for(int i = 0; i < NPIXELS; i++){
-        track.setPixelColor(i, track.Color(255, 0, 0));
-      }; 
-    }
-  
-    track.show();
+
     winner_fx();
     loop1 = 0;
     loop2 = 0;
