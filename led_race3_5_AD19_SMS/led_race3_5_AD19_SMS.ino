@@ -25,6 +25,8 @@
 
                                                             
 #include <Adafruit_NeoPixel.h>
+#include <LiquidCrystal.h>
+
 #define MAXLED         300 // MAX LEDs actives on strip
 
 #define PIN_LED        A0  // R 500 ohms to DI pin for WS2812 and WS2813, for WS2813 BI pin of first LED to GND  ,  CAP 1000 uF to VCC 5v/GND,power supplie 5V 2A  
@@ -73,6 +75,31 @@ unsigned long timestamp=0;
 Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 int tdelay = 5; 
+
+// escreve a estrutura do placar no LCD
+void writeScoreBoardLCD(){
+
+	//Limpa a tela
+	lcd.clear();
+	//Posiciona o cursor na coluna 3, linha 0;
+	lcd.setCursor(0, 0);
+	lcd.print("1");
+
+	lcd.setCursor(1, 0);
+	lcd.print("V");
+	
+	lcd.setCursor(3, 0);
+	lcd.print("T");
+
+	lcd.setCursor(8, 0);
+	lcd.print("2");
+	
+	lcd.setCursor(9, 0);
+	lcd.print("V");
+	
+	lcd.setCursor(11, 0);
+	lcd.print("T");
+}
 
 // ----------------------------------------------------------------------------------
 void set_ramp(byte H, byte a, byte b, byte c){
@@ -130,6 +157,8 @@ void setup() {
     	track.show();
   	};
 
+	// escreve o placar no LCD
+	writeScoreBoardLCD();
 	// começa a corrida
   	start_race();    
 }
