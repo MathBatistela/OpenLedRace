@@ -62,6 +62,7 @@ float speed2 = 0;
 float dist1 = 0;
 float dist2 = 0;
 
+// variaveis que controlam se um player terminou a corrida ou não
 byte finished1 = 0;
 byte finished2 = 0;
 
@@ -104,7 +105,7 @@ void writeScoreBoardLCD(){
     lcd.setCursor(0, i);
     lcd.print("P");
     lcd.setCursor(1, i);
-    lcd.print(i);
+    lcd.print(i + 1);
 
     // voltas
     lcd.setCursor(3, i);
