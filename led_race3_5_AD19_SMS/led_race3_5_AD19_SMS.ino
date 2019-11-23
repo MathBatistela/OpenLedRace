@@ -485,28 +485,30 @@ void loop() {
     if (!finished1) draw_car1();
   }
 
-  if (finished1 && winner == 0){
-  winner = 1;
-  timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
-
-//   Serial.print("Tempo vencedor:\n");
-//   Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
-//   Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
-//   Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
-  }
-  else if (finished2 && winner == 0){
-    winner = 2;
+  if(finished1 && winner == 0){
+    winner = 1;
     timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
 
-//   Serial.print("Tempo vencedor:\n");
-//   Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
-//   Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
-//   Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+    Serial.print("Tempo vencedor:\n");
+    Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+    Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+    Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+    for(int i = 0; i < 3; i++){
+      track.setPixelColor(i, COLOR1);
+    }; 
   }
-
+  else if(finished2 && winner == 0){
+    winner = 2;
+    timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
   
-
-
+    Serial.print("Tempo vencedor:\n");
+    Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+    Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+    Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+  for(int i = 0; i < 3; i++){
+      track.setPixelColor(i, COLOR2);
+    }; 
+  }
                  
   track.show(); 
   delay(tdelay);
