@@ -75,7 +75,7 @@ unsigned long timeP1 = millis();
 unsigned long timeP2 = millis();
 
 // quem é o lider da corrida, player 1 ou 2
-byte leader = 0;
+byte winner = 0;
 
 // total de voltas da corrida
 byte loop_max = 3;
@@ -330,7 +330,7 @@ void start_race(){
 void winner_fx(){
   int msize = sizeof(win_music) / sizeof(int);
 
-  if (leader == 1){
+  if (winner == 1){
     for(int i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, COLOR1);
     }; 
@@ -416,14 +416,6 @@ void loop() {
 
   if (loop2 <= loop_max) dist2 += speed2;
     else finished2 = 1;
-
-  if (dist1 > dist2) {
-    leader = 1;
-  }; 
-
-  if (dist2 > dist1) {
-    leader = 2;
-  };
       
   if (dist1 > NPIXELS * loop1) {
     loop1++;              // incrementando a volta do player 1
@@ -470,17 +462,18 @@ void loop() {
   }; 
 
   if (draworder == 0) {
-    if (loop1 <= loop_max) draw_car1();
-    else finished1 = 1;
-    if (loop2 <= loop_max) draw_car2();
-    else finished2 = 1;
+    if (!finished1) draw_car1();
+    if (!finished2) draw_car2();
   }
   else {
-    if (loop2 <= loop_max) draw_car2();
-    else finished2 = 1;
-    if (loop1 <= loop_max) draw_car1();
-    else finished1 = 1;
-  }   
+    if (!finished2) draw_car2();
+    if (!finished1) draw_car1();
+  }
+
+  if(finished1)
+    winner = 1;
+  else if(finished2)
+    winner = 2;
                  
   track.show(); 
   delay(tdelay);
