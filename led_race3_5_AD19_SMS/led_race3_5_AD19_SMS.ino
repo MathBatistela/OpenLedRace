@@ -55,6 +55,7 @@ int sec = 0;
 int minutes = 0;
 
 unsigned long timeWinner = 0;
+unsigned long instantTime = 0;
 
 int TBEEP = 3; 
 
@@ -345,9 +346,10 @@ void winner_fx(){
   
   for (int note = 0; note < msize; note++) {
     tone(PIN_AUDIO, win_music[note], 200);
-    delay(700);
+    delay(230);
     noTone(PIN_AUDIO);
-  }                                             
+  }
+  delay(3000);                                             
 };
 
 // ----------------------------------------------------------------------------------
@@ -447,7 +449,13 @@ void loop() {
     TBEEP = 2;
   };
 
-  if (finished1 && finished2) {
+
+  if(timeWinner){
+    instantTime = (sec * 1000) + (milSec * 100);
+    instantTime = (instantTime / 1000);
+  }
+
+  if ((finished1 && finished2) || ((instantTime - ((timeWinner % 60000) / 1000)) >= 10)) {
 
     winner_fx();
 
@@ -462,7 +470,8 @@ void loop() {
     finished1 = 0;
     finished2 = 0;
     timeWinner = 0;
-  winner = 0;
+    winner = 0;
+    instantTime = 0;
 
     start_race();
   };
@@ -489,10 +498,10 @@ void loop() {
     if (winner == 0){
       timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
     
-    Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
-    Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
-    Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
-    Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+      Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
+      Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+      Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+      Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
   }
   winner = 1;
 
@@ -501,20 +510,19 @@ void loop() {
     }; 
   }
   else if(finished2){
-  if (winner == 0){
-    timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+    if (winner == 0){
+      timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+      
+      Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
+      Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+      Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+      Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+    }
+      winner = 2;
     
-    Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
-    Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
-    Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
-    Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
-  }
-    winner = 2;
-    timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
-  
-  for(int i = 0; i < 3; i++){
-      track.setPixelColor(i, COLOR2);
-    }; 
+    for(int i = 0; i < 3; i++){
+        track.setPixelColor(i, COLOR2);
+      }; 
   }
                  
   track.show(); 
