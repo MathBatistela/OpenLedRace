@@ -158,62 +158,44 @@ ISR(TIMER1_OVF_vect){                              //interrupção do TIMER1
 void updateTurn(int line, byte turn){
   
   lcd.setCursor(5, line);
-  lcd.print(turn);
+  lcd.print(turn - 1);
 
 }
 
-void updateTime(){
+void updateTime(int i, int n){
 
+	for (int i = 0; i < n; i++){
 
-  
-  lcd.setCursor(10, 0);
-  lcd.print(minutes); 
+		lcd.setCursor(10, i);
+		lcd.print(minutes);
 
-  lcd.setCursor(10, 1);
-  lcd.print(minutes);
+		lcd.setCursor(13, i);
+  		lcd.print(":");
+		
+		if (sec < 10){
+			lcd.setCursor(12, i);
+			lcd.print("0");
+			lcd.setCursor(13, i);
+			lcd.print(sec); 
+		}
+		else{
+			lcd.setCursor(12, i);
+			lcd.print(sec); 
+			
+			lcd.setCursor(12, i);
+			lcd.print(sec);
+		}
 
-    lcd.setCursor(13, 0);
-  lcd.print(":");
-  lcd.setCursor(13, 1);
-  lcd.print(":");
+		lcd.setCursor(14, i);
+		lcd.print(".");
 
-  if (sec < 10){
-    lcd.setCursor(12, 0);
-    lcd.print("0");
-    lcd.setCursor(13, 0);
-    lcd.print(sec); 
-    
-    lcd.setCursor(12, 1);
-    lcd.print("0");
-    lcd.setCursor(13, 1);
-    lcd.print(sec);
-  }
-  else{
-    lcd.setCursor(12, 0);
-    lcd.print(sec); 
-    
-    lcd.setCursor(12, 1);
-    lcd.print(sec);
-  }
-
-  lcd.setCursor(14, 0);
-  lcd.print(".");
-
-  lcd.setCursor(14, 1);
-  lcd.print(".");
-
-     milSec = millis() / 100;
-  while (milSec > 10){
-    milSec %= 10;
-  }
-
-  lcd.setCursor(15, 0);
-  lcd.print(milSec);
-
-  lcd.setCursor(15, 1);
-  lcd.print(milSec);
-  
-
+		milSec = millis() / 100;
+		while (milSec > 10){
+			milSec %= 10;
+		}
+		lcd.setCursor(15, i);
+		lcd.print(milSec);
+	}
 }
 
 // ----------------------------------------------------------------------------------
@@ -251,11 +233,6 @@ void set_loop(byte H,byte a,byte b,byte c){
 void setup() {
   // abre a porta serial a 9600 bps
   Serial.begin(9600);
-
-//     TCCR2A = 0x00;   //Timer operando em modo normal
-//   TCCR2B = 0x07;   //Prescaler 1:1024
-//   TCNT2  = 0x64;   //Inicia conteúdo do Timer2 em 100d
-//   TIMSK2 = 0x01;   //Habilita interrupção do Timer2
 
   // Configuração do timer1 
   TCCR1A = 0;                        //confira timer para operação normal pinos OC1A e OC1B desconectados
@@ -295,7 +272,7 @@ void setup() {
   // começa a corrida
     start_race();  
 
-//   sec = 0;
+  sec = 0;
 
 }
 
@@ -388,7 +365,7 @@ void draw_car2(void){
 void loop() {
     //for(int i=0;i<NPIXELS;i++){track.setPixelColor(i, track.Color(0,0,0));};
 
-  updateTime();
+  updateTime(0, 2);
     for(int i = 0; i < NPIXELS; i++){
     track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
   };
@@ -463,6 +440,8 @@ void loop() {
   if (loop1 > loop_max && loop2 > loop_max) {
 
     winner_fx();
+
+
     loop1 = 0;
     loop2 = 0;
     dist1 = 0;
