@@ -30,7 +30,7 @@
 #define PIN_LED        A0  // R 500 ohms to DI pin for WS2812 and WS2813, for WS2813 BI pin of first LED to GND  ,  CAP 1000 uF to VCC 5v/GND,power supplie 5V 2A  
 #define PIN_P1         7   // switch player 1 to PIN and GND
 #define PIN_P2         6   // switch player 2 to PIN and GND 
-#define PIN_AUDIO      3   // through CAP 2uf to speaker 8 ohms
+#define PIN_AUDIO      9   // through CAP 2uf to speaker 8 ohms
 
 
 int NPIXELS = MAXLED; // leds on track
@@ -44,32 +44,47 @@ int win_music[] = {
     3136    
 };
 
+// configurando pinos do LCD
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
       
-byte  gravity_map[MAXLED];     
+byte  gravity_map[MAXLED];
 
-int TBEEP=3; 
+char auxOVF = 0x00;                         //variável auxiliar para contagem de 1 segundo
+int sec = 0;
+int minutes = 0;
 
-float speed1=0;
-float speed2=0;
-float dist1=0;
-float dist2=0;
+int flagMinutes = 0;
+int flagHour = 0;
+
+int TBEEP = 3; 
+
+float speed1 = 0;
+float speed2 = 0;
+float dist1 = 0;
+float dist2 = 0;
 
 // contador de voltas dos players 1 e 2
-byte loop1=0;
-byte loop2=0;
+byte loop1 = 0;
+byte loop2 = 0;
 
-byte leader=0;
-byte loop_max=2; //total laps race
+// tempos dos players 1 e 2
+unsigned long timeP1 = millis();
+unsigned long timeP2 = millis();
+
+// quem é o lider da corrida, player 1 ou 2
+byte leader = 0;
+
+// total de voltas da corrida
+byte loop_max = 5;
 
 
-float ACEL=0.2;
-float kf=0.015; //friction constant
-float kg=0.003; //gravity constant
+float ACEL = 0.2;
+float kf = 0.015; //friction constant
+float kg = 0.003; //gravity constant
 
-byte flag_sw1=0;
-byte flag_sw2=0;
-byte draworder=0;
+byte flag_sw1 = 0;
+byte flag_sw2 = 0;
+byte draworder = 0;
  
 unsigned long timestamp=0;
 
@@ -111,15 +126,32 @@ void writeScoreBoardLCD(){
   lcd.print(loop2);
 
   // tempo
-  lcd.setCursor(8, 0);
+  lcd.setCursor(9, 0);
   lcd.print("T");
-  lcd.setCursor(8, 1);
+  lcd.setCursor(9, 1);
   lcd.print("T");
 
-  lcd.setCursor(10, 0);
-  lcd.print("T");
-  lcd.setCursor(10, 1);
-  lcd.print("T");
+  lcd.setCursor(11, 0);
+  lcd.print("00:00");
+  lcd.setCursor(11, 1);
+  lcd.print("00:00");
+}
+
+// --- Rotina de Interrupção ---
+ISR(TIMER1_OVF_vect){                              //interrupção do TIMER1 
+
+  sec++;
+
+  if (sec > 59){
+    sec = 0;
+    minutes++;
+    
+    if (minutes > 59){
+      minutes = 0;
+    }
+  }
+
+  TCNT1 = 0xC2F7;                                 // Renicia TIMER
 }
 
 // atualiza as voltas no placar
@@ -127,6 +159,53 @@ void updateTurn(int line, byte turn){
   
   lcd.setCursor(6, line);
   lcd.print(turn);
+
+}
+
+void updateTime(){
+  
+  if (minutes < 10) {
+    lcd.setCursor(11, 0);
+    lcd.print("0");
+    lcd.setCursor(12, 0);
+    lcd.print(minutes); 
+    
+    lcd.setCursor(11, 1);
+    lcd.print("0");
+    lcd.setCursor(12, 1);
+    lcd.print(minutes); 
+  }
+  else{
+    lcd.setCursor(11, 0);
+    lcd.print(minutes); 
+    
+    lcd.setCursor(11, 1);
+    lcd.print(minutes);
+  }
+
+  lcd.setCursor(13, 0);
+  lcd.print(":");
+  lcd.setCursor(13, 1);
+  lcd.print(":");
+
+  if (sec < 10){
+    lcd.setCursor(14, 0);
+    lcd.print("0");
+    lcd.setCursor(15, 0);
+    lcd.print(sec); 
+    
+    lcd.setCursor(14, 1);
+    lcd.print("0");
+    lcd.setCursor(15, 1);
+    lcd.print(sec);
+  }
+  else{
+    lcd.setCursor(14, 0);
+    lcd.print(sec); 
+    
+    lcd.setCursor(14, 1);
+    lcd.print(sec);
+  }
 
 }
 
@@ -163,6 +242,24 @@ void set_loop(byte H,byte a,byte b,byte c){
 
 // ----------------------------------------------------------------------------------
 void setup() {
+  // abre a porta serial a 9600 bps
+  Serial.begin(9600);
+
+//     TCCR2A = 0x00;   //Timer operando em modo normal
+//   TCCR2B = 0x07;   //Prescaler 1:1024
+//   TCNT2  = 0x64;   //Inicia conteúdo do Timer2 em 100d
+//   TIMSK2 = 0x01;   //Habilita interrupção do Timer2
+
+  // Configuração do timer1 
+  TCCR1A = 0;                        //confira timer para operação normal pinos OC1A e OC1B desconectados
+  TCCR1B = 0;                        //limpa registrador
+  TCCR1B |= (1<<CS10)|(1 << CS12);   // configura prescaler para 1024: CS12 = 1 e CS10 = 1
+  
+  TCNT1 = 0xC2F7;                    // incia timer com valor para que estouro ocorra em 1 segundo 65536-(16MHz/1024/1Hz) = 49911 = 0xC2F7
+  
+  TIMSK1 |= (1 << TOIE1);           // habilita a interrupção do TIMER1
+
+
   // iniciando a gravidade em todos os leds da pista
     for(int i = 0; i < NPIXELS; i++){
       gravity_map[i] = 127;
@@ -189,7 +286,10 @@ void setup() {
   // escreve o placar no LCD
   writeScoreBoardLCD();
   // começa a corrida
-    start_race();    
+    start_race();  
+
+//   sec = 0;
+
 }
 
 // ----------------------------------------------------------------------------------
@@ -280,6 +380,8 @@ void draw_car2(void){
 // ----------------------------------------------------------------------------------
 void loop() {
     //for(int i=0;i<NPIXELS;i++){track.setPixelColor(i, track.Color(0,0,0));};
+
+  updateTime();
     for(int i = 0; i < NPIXELS; i++){
     track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
   };
