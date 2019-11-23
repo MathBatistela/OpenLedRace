@@ -49,7 +49,7 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
       
 byte  gravity_map[MAXLED];
 
-char auxOVF = 0x00;                         //variável auxiliar para contagem de 1 segundo
+int milSec = 0;
 int sec = 0;
 int minutes = 0;
 
@@ -115,26 +115,26 @@ void writeScoreBoardLCD(){
   lcd.print("2");
 
   // voltas
-  lcd.setCursor(4, 0);
+  lcd.setCursor(3, 0);
   lcd.print("V");
-  lcd.setCursor(4, 1);
+  lcd.setCursor(3, 1);
   lcd.print("V");
 
-  lcd.setCursor(6, 0);
+  lcd.setCursor(5, 0);
   lcd.print(loop1);
-  lcd.setCursor(6, 1);
+  lcd.setCursor(5, 1);
   lcd.print(loop2);
 
   // tempo
-  lcd.setCursor(9, 0);
+  lcd.setCursor(8, 0);
   lcd.print("T");
-  lcd.setCursor(9, 1);
+  lcd.setCursor(8, 1);
   lcd.print("T");
 
-  lcd.setCursor(11, 0);
-  lcd.print("00:00");
-  lcd.setCursor(11, 1);
-  lcd.print("00:00");
+  lcd.setCursor(10, 0);
+  lcd.print("0:00.0");
+  lcd.setCursor(10, 1);
+  lcd.print("0:00.0");
 }
 
 // --- Rotina de Interrupção ---
@@ -157,55 +157,62 @@ ISR(TIMER1_OVF_vect){                              //interrupção do TIMER1
 // atualiza as voltas no placar
 void updateTurn(int line, byte turn){
   
-  lcd.setCursor(6, line);
+  lcd.setCursor(5, line);
   lcd.print(turn);
 
 }
 
 void updateTime(){
-  
-  if (minutes < 10) {
-    lcd.setCursor(11, 0);
-    lcd.print("0");
-    lcd.setCursor(12, 0);
-    lcd.print(minutes); 
-    
-    lcd.setCursor(11, 1);
-    lcd.print("0");
-    lcd.setCursor(12, 1);
-    lcd.print(minutes); 
-  }
-  else{
-    lcd.setCursor(11, 0);
-    lcd.print(minutes); 
-    
-    lcd.setCursor(11, 1);
-    lcd.print(minutes);
-  }
 
-  lcd.setCursor(13, 0);
+
+  
+  lcd.setCursor(10, 0);
+  lcd.print(minutes); 
+
+  lcd.setCursor(10, 1);
+  lcd.print(minutes);
+
+    lcd.setCursor(13, 0);
   lcd.print(":");
   lcd.setCursor(13, 1);
   lcd.print(":");
 
   if (sec < 10){
-    lcd.setCursor(14, 0);
+    lcd.setCursor(12, 0);
     lcd.print("0");
-    lcd.setCursor(15, 0);
+    lcd.setCursor(13, 0);
     lcd.print(sec); 
     
-    lcd.setCursor(14, 1);
+    lcd.setCursor(12, 1);
     lcd.print("0");
-    lcd.setCursor(15, 1);
+    lcd.setCursor(13, 1);
     lcd.print(sec);
   }
   else{
-    lcd.setCursor(14, 0);
+    lcd.setCursor(12, 0);
     lcd.print(sec); 
     
-    lcd.setCursor(14, 1);
+    lcd.setCursor(12, 1);
     lcd.print(sec);
   }
+
+  lcd.setCursor(14, 0);
+  lcd.print(".");
+
+  lcd.setCursor(14, 1);
+  lcd.print(".");
+
+     milSec = millis() / 100;
+  while (milSec > 10){
+    milSec %= 10;
+  }
+
+  lcd.setCursor(15, 0);
+  lcd.print(milSec);
+
+  lcd.setCursor(15, 1);
+  lcd.print(milSec);
+  
 
 }
 
