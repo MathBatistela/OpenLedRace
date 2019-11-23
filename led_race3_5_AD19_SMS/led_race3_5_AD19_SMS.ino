@@ -63,6 +63,9 @@ float speed2 = 0;
 float dist1 = 0;
 float dist2 = 0;
 
+byte finished1 = 0;
+byte finished2 = 0;
+
 // contador de voltas dos players 1 e 2
 byte loop1 = 0;
 byte loop2 = 0;
@@ -75,7 +78,7 @@ unsigned long timeP2 = millis();
 byte leader = 0;
 
 // total de voltas da corrida
-byte loop_max = 5;
+byte loop_max = 3;
 
 
 float ACEL = 0.2;
@@ -424,8 +427,11 @@ void loop() {
 
   speed2 -= speed2 * kf; 
       
-  dist1 += speed1;
-  dist2 += speed2;
+  if (loop1 <= loop_max) dist1 += speed1;
+    else finished1 = 1;
+
+  if (loop2 <= loop_max) dist2 += speed2;
+    else finished2 = 1;
 
   if (dist1 > dist2) {
     leader = 1;
@@ -453,7 +459,7 @@ void loop() {
     TBEEP = 2;
   };
 
-  if (loop1 > loop_max && loop2 > loop_max) {
+  if (finished1 == 1 && finished2) == 1 {
 
     winner_fx();
     loop1 = 0;
@@ -477,11 +483,15 @@ void loop() {
 
   if (draworder == 0) {
     if (loop1 <= loop_max) draw_car1();
+    else finished1 = 1;
     if (loop2 <= loop_max) draw_car2();
+    else finished2 = 1;
   }
   else {
     if (loop2 <= loop_max) draw_car2();
+    else finished2 = 1;
     if (loop1 <= loop_max) draw_car1();
+    else finished1 = 1;
   }   
                  
   track.show(); 
