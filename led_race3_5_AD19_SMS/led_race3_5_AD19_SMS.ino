@@ -471,10 +471,18 @@ void loop() {
     if (!finished1) draw_car1();
   }
 
-  if(finished1)
+  if(finished1){
     winner = 1;
-  else if(finished2)
+    for(int i = 0; i < 3; i++){
+      track.setPixelColor(i, COLOR1);
+    }; 
+  }
+  else if(finished2){
     winner = 2;
+    for(int i = 0; i < 3; i++){
+      track.setPixelColor(i, COLOR2);
+    }; 
+  }
                  
   track.show(); 
   delay(tdelay);
