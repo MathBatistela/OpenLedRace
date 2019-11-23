@@ -62,6 +62,7 @@ float speed2 = 0;
 float dist1 = 0;
 float dist2 = 0;
 
+// variaveis que controlam se um player terminou a corrida ou não
 byte finished1 = 0;
 byte finished2 = 0;
 
@@ -77,7 +78,7 @@ unsigned long timeP2 = millis();
 byte winner = 0;
 
 // total de voltas da corrida
-byte loop_max = 3;
+byte loop_max = 2;
 
 
 float ACEL = 0.2;
@@ -97,14 +98,15 @@ int tdelay = 5;
 // escreve a estrutura do placar no LCD
 void writeScoreBoardLCD(){
 
-  // escrevendo a estrutura do placar (coluna, linha)
+    // escrevendo a estrutura do placar (coluna, linha)
+    lcd.clear();
 
     for (int i = 0; i < 2; i++){
       // escrevendo players
     lcd.setCursor(0, i);
     lcd.print("P");
     lcd.setCursor(1, i);
-    lcd.print(i);
+    lcd.print(i + 1);
 
     // voltas
     lcd.setCursor(3, i);
@@ -150,9 +152,8 @@ void updateTurn(int line, byte turn){
 
 void updateTime(int i, int n){
 
-  for (int i = 0; i < n; i++){
-    if (i == 0 && finished1 == 1) break;    
-    if( i == 1 && finished2 == 1) break;
+    if (i == 0 && finished1 == 1) return;    
+    if (i == 1 && finished2 == 1) return;
     
     lcd.setCursor(10, i);
     lcd.print(minutes);
@@ -183,7 +184,7 @@ void updateTime(int i, int n){
     }
     lcd.setCursor(15, i);
     lcd.print(milSec);
-  }
+  
 }
 
 // ----------------------------------------------------------------------------------
@@ -320,6 +321,15 @@ void start_race(){
 void winner_fx(){
   int msize = sizeof(win_music) / sizeof(int);
 
+  lcd.clear();
+  lcd.setCursor(5, 0);
+  lcd.print("Winner");
+  lcd.setCursor(4, 1);
+  lcd.print("Player");
+  lcd.setCursor(11, 1);
+  lcd.print(winner);
+
+
   if (winner == 1){
     for(int i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, COLOR1);
@@ -335,7 +345,7 @@ void winner_fx(){
   
   for (int note = 0; note < msize; note++) {
     tone(PIN_AUDIO, win_music[note], 200);
-    delay(230);
+    delay(700);
     noTone(PIN_AUDIO);
   }                                             
 };
@@ -358,7 +368,12 @@ void draw_car2(void){
 void loop() {
     //for(int i=0;i<NPIXELS;i++){track.setPixelColor(i, track.Color(0,0,0));};
 
-  updateTime(0, 2);
+  // atualizando tesmpos de todos os players
+  for (int i = 0; i < 2; i++){
+      updateTime(i, i+1);
+  }
+
+
     for(int i = 0; i < NPIXELS; i++){
     track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
   };
