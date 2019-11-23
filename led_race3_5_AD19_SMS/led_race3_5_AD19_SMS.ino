@@ -443,7 +443,7 @@ void loop() {
     TBEEP = 2;
   };
 
-  if (finished1 == 1 && finished2) == 1 {
+  if (finished1 && finished2) {
 
     winner_fx();
 
@@ -455,6 +455,8 @@ void loop() {
     speed1 = 0;
     speed2 = 0;
     timestamp = 0;
+    finished1 = 0;
+    finished2 = 0;
     start_race();
   };
 
