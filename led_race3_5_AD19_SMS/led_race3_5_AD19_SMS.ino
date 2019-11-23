@@ -31,7 +31,8 @@
 #define PIN_P1         7   // switch player 1 to PIN and GND
 #define PIN_P2         6   // switch player 2 to PIN and GND 
 #define PIN_AUDIO      9   // through CAP 2uf to speaker 8 ohms
-
+#define PIN_START      8   // button to start the race
+ 
 
 int NPIXELS = MAXLED; // leds on track
 
@@ -77,6 +78,9 @@ byte winner = 0;
 
 // total de voltas da corrida
 byte loop_max = 2;
+
+// variavel que controla o inicio da corrida
+byte start_flag = 0;
 
 
 float ACEL = 0.2;
@@ -243,7 +247,7 @@ void setup() {
   // configurando os botões dos players 1 e 2
     pinMode(PIN_P1, INPUT_PULLUP); 
     pinMode(PIN_P2, INPUT_PULLUP);  
-
+    pinMode(PIN_START, INPUT_PULLUP);
   // Pressionar o botão do player 1 para configurar ua rampa
     if ((digitalRead(PIN_P1) == 0)){
     // configurando uma rampa na pista, com o topo no 100 e com 10 leds de subida e 10 de subida
@@ -257,16 +261,13 @@ void setup() {
       track.show();
     };
 
-    // começa a corrida
-    start_race();
-
 }
 
 // ----------------------------------------------------------------------------------
 void start_race(){
 
   // escreve o placar no LCD
-    writeScoreBoardLCD();
+  writeScoreBoardLCD();
   
   for(int i = 0; i < NPIXELS; i++){
     track.setPixelColor(i, track.Color(0,0,0));
@@ -316,6 +317,8 @@ void start_race(){
   sec = 0;
     minutes = 0;
 
+  start_flag = 1;
+
 };
 
 // ----------------------------------------------------------------------------------
@@ -329,6 +332,7 @@ void winner_fx(){
   lcd.print("Player");
   lcd.setCursor(11, 1);
   lcd.print(winner);
+
 
 
   if (winner == 1){
@@ -349,7 +353,8 @@ void winner_fx(){
     delay(230);
     noTone(PIN_AUDIO);
   }
-  delay(3000);                                             
+  delay(3000);
+  lcd.clear();                                             
 };
 
 // ----------------------------------------------------------------------------------
@@ -370,169 +375,184 @@ void draw_car2(void){
 void loop() {
     //for(int i=0;i<NPIXELS;i++){track.setPixelColor(i, track.Color(0,0,0));};
 
-  // atualizando tesmpos de todos os players
-  for (int i = 0; i < 2; i++){
-      updateTime(i, i+1);
-  }
-
-
-    for(int i = 0; i < NPIXELS; i++){
-    track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
-  };
-    
-    if ( (flag_sw1 == 1) && (digitalRead(PIN_P1) == 0) ) {
-    flag_sw1 = 0;
-    speed1 += ACEL;
-  };
-
-    if ( (flag_sw1 == 0) && (digitalRead(PIN_P1) == 1) ) {
-    flag_sw1 = 1;
-  };
-
-    if ( (gravity_map[(word)dist1 % NPIXELS]) < 127 ){
-    speed1 -= kg * (127 - (gravity_map[(word)dist1 % NPIXELS]));
-  }; 
-    
-  if ( (gravity_map[(word)dist1 % NPIXELS]) > 127){
-    speed1 += kg * ((gravity_map[(word)dist1 % NPIXELS]) - 127);
-  };
-    
-    
-  speed1 -= speed1 * kf; 
-    
-    if ( (flag_sw2 == 1) && (digitalRead(PIN_P2) == 0) ) {
-    flag_sw2 = 0;
-    speed2 += ACEL;
-  };
-    if ( (flag_sw2 == 0) && (digitalRead(PIN_P2) == 1) ) {
-    flag_sw2 = 1;
-  };
-
-    if ( (gravity_map[(word)dist2 % NPIXELS]) < 127) {
-    speed2 -= kg * (127 - (gravity_map[(word)dist2 % NPIXELS]));
-  };
-
-    if ( (gravity_map[(word)dist2 % NPIXELS]) > 127) {
-    speed2 += kg * ((gravity_map[(word)dist2 % NPIXELS]) - 127);
-  };
-
-  speed2 -= speed2 * kf; 
-      
-  if (loop1 <= loop_max) dist1 += speed1;
-    else{
-    
-    updateTime(0, 1);
-    finished1 = 1;
-  } 
-
-  if (loop2 <= loop_max) dist2 += speed2;
-    else{
-    updateTime(1, 2);
-    finished2 = 1;
-  } 
-      
-  if (dist1 > NPIXELS * loop1) {
-    loop1++;              // incrementando a volta do player 1
-    
-    updateTurn(0, loop1);       // atualizando as voltas no LCD
-
-    tone(PIN_AUDIO, 600);
-    TBEEP = 2;
-  };
-
-  if (dist2 > NPIXELS * loop2) {
-    loop2++;              // incrementando a volta do player 2
-
-    updateTurn(1, loop2);       // atualizando as voltas no LCD
-
-    tone(PIN_AUDIO, 700);
-    TBEEP = 2;
-  };
-
-
-  if(timeWinner){
-    instantTime = (sec * 1000) + (milSec * 100);
-    instantTime = (instantTime / 1000);
-  }
-
-  if ((finished1 && finished2) || ((instantTime - ((timeWinner % 60000) / 1000)) >= 10)) {
-
-    winner_fx();
-
-
-    loop1 = 0;
-    loop2 = 0;
-    dist1 = 0;
-    dist2 = 0;
-    speed1 = 0;
-    speed2 = 0;
-    timestamp = 0;
-    finished1 = 0;
-    finished2 = 0;
-    timeWinner = 0;
-    winner = 0;
-    instantTime = 0;
-
+  // define o início da corrida quando o botão start for pressionado
+  if(digitalRead(PIN_START) == 0){
     start_race();
-  };
+  }
 
-  if ((millis() & 512) == (512 * draworder)) {
-    if (draworder==0) {
-      draworder=1;
+  if(start_flag){
+
+    // atualizando tesmpos de todos os players
+    for (int i = 0; i < 2; i++){
+        updateTime(i, i+1);
+    }
+
+
+      for(int i = 0; i < NPIXELS; i++){
+      track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
+    };
+      
+      if ( (flag_sw1 == 1) && (digitalRead(PIN_P1) == 0) ) {
+      flag_sw1 = 0;
+      speed1 += ACEL;
+    };
+
+      if ( (flag_sw1 == 0) && (digitalRead(PIN_P1) == 1) ) {
+      flag_sw1 = 1;
+    };
+
+      if ( (gravity_map[(word)dist1 % NPIXELS]) < 127 ){
+      speed1 -= kg * (127 - (gravity_map[(word)dist1 % NPIXELS]));
+    }; 
+      
+    if ( (gravity_map[(word)dist1 % NPIXELS]) > 127){
+      speed1 += kg * ((gravity_map[(word)dist1 % NPIXELS]) - 127);
+    };
+      
+      
+    speed1 -= speed1 * kf; 
+      
+      if ( (flag_sw2 == 1) && (digitalRead(PIN_P2) == 0) ) {
+      flag_sw2 = 0;
+      speed2 += ACEL;
+    };
+      if ( (flag_sw2 == 0) && (digitalRead(PIN_P2) == 1) ) {
+      flag_sw2 = 1;
+    };
+
+      if ( (gravity_map[(word)dist2 % NPIXELS]) < 127) {
+      speed2 -= kg * (127 - (gravity_map[(word)dist2 % NPIXELS]));
+    };
+
+      if ( (gravity_map[(word)dist2 % NPIXELS]) > 127) {
+      speed2 += kg * ((gravity_map[(word)dist2 % NPIXELS]) - 127);
+    };
+
+    speed2 -= speed2 * kf; 
+        
+    if (loop1 <= loop_max) dist1 += speed1;
+      else{
+      
+      updateTime(0, 1);
+      finished1 = 1;
+    } 
+
+    if (loop2 <= loop_max) dist2 += speed2;
+      else{
+      updateTime(1, 2);
+      finished2 = 1;
+    } 
+        
+    if (dist1 > NPIXELS * loop1) {
+      loop1++;              // incrementando a volta do player 1
+      
+      updateTurn(0, loop1);       // atualizando as voltas no LCD
+
+      tone(PIN_AUDIO, 600);
+      TBEEP = 2;
+    };
+
+    if (dist2 > NPIXELS * loop2) {
+      loop2++;              // incrementando a volta do player 2
+
+      updateTurn(1, loop2);       // atualizando as voltas no LCD
+
+      tone(PIN_AUDIO, 700);
+      TBEEP = 2;
+    };
+
+
+    if(timeWinner){
+      instantTime = (sec * 1000) + (milSec * 100);
+      instantTime = (instantTime / 1000);
+    }
+
+    if ((finished1 && finished2) || ((instantTime - ((timeWinner % 60000) / 1000)) >= 10)) {
+
+      winner_fx();
+
+      loop1 = 0;
+      loop2 = 0;
+      dist1 = 0;
+      dist2 = 0;
+      speed1 = 0;
+      speed2 = 0;
+      timestamp = 0;
+      finished1 = 0;
+      finished2 = 0;
+      timeWinner = 0;
+      winner = 0;
+      instantTime = 0;
+      start_flag = 0;
+
+    };
+
+    if ((millis() & 512) == (512 * draworder)) {
+      if (draworder==0) {
+        draworder=1;
+      }
+      else {
+        draworder=0;
+      }   
+    }; 
+
+    if (draworder == 0) {
+      if (!finished1) draw_car1();
+      if (!finished2) draw_car2();
     }
     else {
-      draworder=0;
-    }   
-  }; 
-
-  if (draworder == 0) {
-    if (!finished1) draw_car1();
-    if (!finished2) draw_car2();
-  }
-  else {
-    if (!finished2) draw_car2();
-    if (!finished1) draw_car1();
-  }
-
-  if(finished1){
-    if (winner == 0){
-      timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
-    
-      Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
-      Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
-      Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
-      Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
-  }
-  winner = 1;
-
-    for(int i = 0; i < 3; i++){
-      track.setPixelColor(i, COLOR1);
-    }; 
-  }
-  else if(finished2){
-    if (winner == 0){
-      timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
-      
-      Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
-      Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
-      Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
-      Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+      if (!finished2) draw_car2();
+      if (!finished1) draw_car1();
     }
-      winner = 2;
-    
-    for(int i = 0; i < 3; i++){
-        track.setPixelColor(i, COLOR2);
+
+    if(finished1){
+      if (winner == 0){
+        timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+      
+        Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
+        Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+        Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+        Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+    }
+    winner = 1;
+
+      for(int i = 0; i < 3; i++){
+        track.setPixelColor(i, COLOR1);
       }; 
+    }
+    else if(finished2){
+      if (winner == 0){
+        timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+        
+        Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
+        Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+        Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+        Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+      }
+        winner = 2;
+      
+      for(int i = 0; i < 3; i++){
+          track.setPixelColor(i, COLOR2);
+        }; 
+    }
+                  
+    track.show(); 
+    delay(tdelay);
+      
+      if (TBEEP > 0) {
+      TBEEP -= 1;
+      // conflito de lib !!!! interrupção por neopixel
+      if (TBEEP == 0) {
+        noTone(PIN_AUDIO);
+      }; 
+    };
+
   }
-                 
-  track.show(); 
-  delay(tdelay);
-    
-    if (TBEEP > 0) {
-    TBEEP -= 1;
-    // conflito de lib !!!! interrupção por neopixel
-    if (TBEEP == 0) {
-      noTone(PIN_AUDIO);
-    }; 
-  };   
+  else{
+    lcd.setCursor(5, 0);
+    lcd.print("Press");
+    lcd.setCursor(4, 1);
+    lcd.print("To start");        
+  }
+
 }
