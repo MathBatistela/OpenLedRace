@@ -310,7 +310,10 @@ void start_race(){
   noTone(PIN_AUDIO);     
 
   timestamp = 0;              
+  
+    milSec = 0;
   sec = 0;
+    minutes = 0;
 
 };
 
@@ -458,11 +461,8 @@ void loop() {
     timestamp = 0;
     finished1 = 0;
     finished2 = 0;
-    milSec = 0;
-    sec = 0;
-    minutes = 0;
-  
     timeWinner = 0;
+  winner = 0;
 
     start_race();
   };
@@ -485,26 +485,33 @@ void loop() {
     if (!finished1) draw_car1();
   }
 
-  if(finished1 == 1 && winner == 0){
-    winner = 1;
-    timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
-
-    Serial.print("Tempo vencedor:\n");
+  if(finished1){
+    if (winner == 0){
+      timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+    
+    Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
     Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
     Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
     Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+  }
+  winner = 1;
+
     for(int i = 0; i < 3; i++){
       track.setPixelColor(i, COLOR1);
     }; 
   }
-  else if(finished2 == 1 && winner == 0){
-    winner = 2;
+  else if(finished2){
+  if (winner == 0){
     timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
-  
-    Serial.print("Tempo vencedor:\n");
+    
+    Serial.print("Tempo vencedor: "); Serial.print(timeWinner);  Serial.print("\n");
     Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
     Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
     Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+  }
+    winner = 2;
+    timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+  
   for(int i = 0; i < 3; i++){
       track.setPixelColor(i, COLOR2);
     }; 
