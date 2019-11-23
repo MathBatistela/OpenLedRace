@@ -54,6 +54,7 @@ int milSec = 0;
 int sec = 0;
 int minutes = 0;
 
+unsigned long timeWinner = 0;
 
 int TBEEP = 3; 
 
@@ -70,10 +71,6 @@ byte finished2 = 0;
 byte loop1 = 0;
 byte loop2 = 0;
 
-// tempos dos players 1 e 2
-unsigned long timeP1 = millis();
-unsigned long timeP2 = millis();
-
 // quem é o lider da corrida, player 1 ou 2
 byte winner = 0;
 
@@ -89,7 +86,7 @@ byte flag_sw1 = 0;
 byte flag_sw2 = 0;
 byte draworder = 0;
  
-unsigned long timestamp=0;
+unsigned long timestamp = 0;
 
 Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ800);
 
@@ -260,9 +257,7 @@ void setup() {
     };
 
     // começa a corrida
-    start_race();  
-
-  sec = 0;
+    start_race();
 
 }
 
@@ -315,6 +310,8 @@ void start_race(){
   noTone(PIN_AUDIO);     
 
   timestamp = 0;              
+  sec = 0;
+
 };
 
 // ----------------------------------------------------------------------------------
@@ -461,10 +458,12 @@ void loop() {
     timestamp = 0;
     finished1 = 0;
     finished2 = 0;
-  milSec = 0;
-  sec = 0;
-  minutes = 0;
+    milSec = 0;
+    sec = 0;
+    minutes = 0;
   
+    timeWinner = 0;
+
     start_race();
   };
 
@@ -486,10 +485,28 @@ void loop() {
     if (!finished1) draw_car1();
   }
 
-  if(finished1)
-    winner = 1;
-  else if(finished2)
+  if (finished1 && winner == 0){
+  winner = 1;
+  timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+
+//   Serial.print("Tempo vencedor:\n");
+//   Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+//   Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+//   Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+  }
+  else if (finished2 && winner == 0){
     winner = 2;
+    timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
+
+//   Serial.print("Tempo vencedor:\n");
+//   Serial.print("Minutos: "); Serial.print(timeWinner / 60000); Serial.print("\n");
+//   Serial.print("Segundos: "); Serial.print((timeWinner % 60000) / 1000); Serial.print("\n");
+//   Serial.print("Ms: "); Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n");
+  }
+
+  
+
+
                  
   track.show(); 
   delay(tdelay);
