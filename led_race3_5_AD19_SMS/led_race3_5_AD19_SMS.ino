@@ -97,6 +97,23 @@ Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ80
 
 int tdelay = 5; 
 
+// limpa o rank da EEPROM
+void clearRank(){
+	Serial.print("Entrei para limpar geral!\n");
+}
+
+// checa se tem caracter e toma a decisão que for necessária
+void checkEEPROM(){
+
+	if (Serial.available()) { // Verificar se há caracteres disponíveis
+		char caractere = Serial.read();
+
+		if (caractere == "clearRank"){
+			clearRank();
+		}
+	}
+}
+
 // escreve a estrutura do placar no LCD
 void writeScoreBoardLCD(){
 
