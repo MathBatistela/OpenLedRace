@@ -49,12 +49,11 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
       
 byte  gravity_map[MAXLED];
 
+// variaveis de tempos
 int milSec = 0;
 int sec = 0;
 int minutes = 0;
 
-int flagMinutes = 0;
-int flagHour = 0;
 
 int TBEEP = 3; 
 
@@ -98,46 +97,30 @@ int tdelay = 5;
 // escreve a estrutura do placar no LCD
 void writeScoreBoardLCD(){
 
-  // iniciando o LCD 16x2
-  lcd.begin(16, 2);
-
-  //Limpa a tela
-  lcd.clear();
-
   // escrevendo a estrutura do placar (coluna, linha)
 
-  // escrevendo players
-  lcd.setCursor(0, 0);
-  lcd.print("P");
-  lcd.setCursor(1, 0);
-  lcd.print("1");
+    for (int i = 0; i < 2; i++){
+      // escrevendo players
+    lcd.setCursor(0, i);
+    lcd.print("P");
+    lcd.setCursor(1, i);
+    lcd.print(i);
 
-  lcd.setCursor(0, 1);
-  lcd.print("P");
-  lcd.setCursor(1, 1);
-  lcd.print("2");
+    // voltas
+    lcd.setCursor(3, i);
+    lcd.print("V");
 
-  // voltas
-  lcd.setCursor(3, 0);
-  lcd.print("V");
-  lcd.setCursor(3, 1);
-  lcd.print("V");
+    lcd.setCursor(5, i);
+      lcd.print(0);
 
-  lcd.setCursor(5, 0);
-  lcd.print(loop1);
-  lcd.setCursor(5, 1);
-  lcd.print(loop2);
+    // tempo
+    lcd.setCursor(8, i);
+    lcd.print("T");
 
-  // tempo
-  lcd.setCursor(8, 0);
-  lcd.print("T");
-  lcd.setCursor(8, 1);
-  lcd.print("T");
+    lcd.setCursor(10, i);
+      lcd.print("0:00.0");
 
-  lcd.setCursor(10, 0);
-  lcd.print("0:00.0");
-  lcd.setCursor(10, 1);
-  lcd.print("0:00.0");
+    }
 }
 
 // --- Rotina de Interrupção ---
@@ -167,38 +150,40 @@ void updateTurn(int line, byte turn){
 
 void updateTime(int i, int n){
 
-	for (int i = 0; i < n; i++){
+  for (int i = 0; i < n; i++){
+    if (i == 0 && finished1 == 1) break;    
+    if( i == 1 && finished2 == 1) break;
+    
+    lcd.setCursor(10, i);
+    lcd.print(minutes);
 
-		lcd.setCursor(10, i);
-		lcd.print(minutes);
+    lcd.setCursor(13, i);
+      lcd.print(":");
+    
+    if (sec < 10){
+      lcd.setCursor(12, i);
+      lcd.print("0");
+      lcd.setCursor(13, i);
+      lcd.print(sec); 
+    }
+    else{
+      lcd.setCursor(12, i);
+      lcd.print(sec); 
+      
+      lcd.setCursor(12, i);
+      lcd.print(sec);
+    }
 
-		lcd.setCursor(13, i);
-  		lcd.print(":");
-		
-		if (sec < 10){
-			lcd.setCursor(12, i);
-			lcd.print("0");
-			lcd.setCursor(13, i);
-			lcd.print(sec); 
-		}
-		else{
-			lcd.setCursor(12, i);
-			lcd.print(sec); 
-			
-			lcd.setCursor(12, i);
-			lcd.print(sec);
-		}
+    lcd.setCursor(14, i);
+    lcd.print(".");
 
-		lcd.setCursor(14, i);
-		lcd.print(".");
-
-		milSec = millis() / 100;
-		while (milSec > 10){
-			milSec %= 10;
-		}
-		lcd.setCursor(15, i);
-		lcd.print(milSec);
-	}
+    milSec = millis() / 100;
+    while (milSec > 10){
+      milSec %= 10;
+    }
+    lcd.setCursor(15, i);
+    lcd.print(milSec);
+  }
 }
 
 // ----------------------------------------------------------------------------------
@@ -234,8 +219,11 @@ void set_loop(byte H,byte a,byte b,byte c){
 
 // ----------------------------------------------------------------------------------
 void setup() {
-  // abre a porta serial a 9600 bps
-  Serial.begin(9600);
+    // abre a porta serial a 9600 bps
+    Serial.begin(9600);
+
+  // iniciando o LCD 16x2
+    lcd.begin(16, 2);
 
   // Configuração do timer1 
   TCCR1A = 0;                        //confira timer para operação normal pinos OC1A e OC1B desconectados
@@ -270,9 +258,7 @@ void setup() {
       track.show();
     };
 
-  // escreve o placar no LCD
-  writeScoreBoardLCD();
-  // começa a corrida
+    // começa a corrida
     start_race();  
 
   sec = 0;
@@ -281,6 +267,10 @@ void setup() {
 
 // ----------------------------------------------------------------------------------
 void start_race(){
+
+  // escreve o placar no LCD
+    writeScoreBoardLCD();
+  
   for(int i = 0; i < NPIXELS; i++){
     track.setPixelColor(i, track.Color(0,0,0));
   };
@@ -412,10 +402,17 @@ void loop() {
   speed2 -= speed2 * kf; 
       
   if (loop1 <= loop_max) dist1 += speed1;
-    else finished1 = 1;
+    else{
+    
+    updateTime(0, 1);
+    finished1 = 1;
+  } 
 
   if (loop2 <= loop_max) dist2 += speed2;
-    else finished2 = 1;
+    else{
+    updateTime(1, 2);
+    finished2 = 1;
+  } 
       
   if (dist1 > NPIXELS * loop1) {
     loop1++;              // incrementando a volta do player 1
@@ -449,6 +446,10 @@ void loop() {
     timestamp = 0;
     finished1 = 0;
     finished2 = 0;
+  milSec = 0;
+  sec = 0;
+  minutes = 0;
+  
     start_race();
   };
 
