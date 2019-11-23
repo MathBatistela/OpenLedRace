@@ -485,7 +485,7 @@ void loop() {
     if (!finished1) draw_car1();
   }
 
-  if(finished1 && winner == 0){
+  if(finished1 == 1 && winner == 0){
     winner = 1;
     timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
 
@@ -497,7 +497,7 @@ void loop() {
       track.setPixelColor(i, COLOR1);
     }; 
   }
-  else if(finished2 && winner == 0){
+  else if(finished2 == 1 && winner == 0){
     winner = 2;
     timeWinner = (minutes * 60000) + (sec * 1000) + (milSec * 100);
   
