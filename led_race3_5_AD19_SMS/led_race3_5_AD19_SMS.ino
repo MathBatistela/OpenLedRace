@@ -125,7 +125,6 @@ void clearRank(){
 
 void listRank(){
 
-  // print(                                )
   Serial.print("\n\tNome\t\t\t\t\tTempo\t\tData\n\n");
   char aux = "";
   for (int i = 0; i < 10; i++){
