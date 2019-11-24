@@ -360,10 +360,6 @@ void start_race(){
 
   // escreve o placar no LCD
   writeScoreBoardLCD();
-  
-  for(int i = 0; i < NPIXELS; i++){
-    track.setPixelColor(i, track.Color(0,0,0));
-  };
 
   track.show();
 
@@ -462,6 +458,27 @@ void draw_car2(void){
     track.setPixelColor(((word)dist2 % NPIXELS) + i, track.Color(255 - i * 20, 0, 0));
   };            
 }
+
+void finish_race(void){
+  loop1 = 0;
+  loop2 = 0;
+  dist1 = 0;
+  dist2 = 0;
+  speed1 = 0;
+  speed2 = 0;
+  timestamp = 0;
+  finished1 = 0;
+  finished2 = 0;
+  timeWinner = 0;
+  winner = 0;
+  instantTime = 0;
+  start_flag = 0;
+
+  for(int i = 0; i < NPIXELS; i++){
+    track.setPixelColor(i, track.Color(0,0,0));
+  };
+
+}
   
 // ----------------------------------------------------------------------------------
 void loop() {
@@ -471,7 +488,12 @@ void loop() {
 
   // define o início da corrida quando o botão start for pressionado
   if(digitalRead(PIN_START) == 0){
+    if(start_flag == 0)
     start_race();
+    else{
+      finish_race();
+      delay(500);
+    }
   }
 
   if(start_flag){
@@ -482,20 +504,20 @@ void loop() {
     }
 
 
-      for(int i = 0; i < NPIXELS; i++){
+    for(int i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
     };
       
-      if ( (flag_sw1 == 1) && (digitalRead(PIN_P1) == 0) ) {
+    if ( (flag_sw1 == 1) && (digitalRead(PIN_P1) == 0) ) {
       flag_sw1 = 0;
       speed1 += ACEL;
     };
 
-      if ( (flag_sw1 == 0) && (digitalRead(PIN_P1) == 1) ) {
+    if ( (flag_sw1 == 0) && (digitalRead(PIN_P1) == 1) ) {
       flag_sw1 = 1;
     };
 
-      if ( (gravity_map[(word)dist1 % NPIXELS]) < 127 ){
+    if ( (gravity_map[(word)dist1 % NPIXELS]) < 127 ){
       speed1 -= kg * (127 - (gravity_map[(word)dist1 % NPIXELS]));
     }; 
       
@@ -506,33 +528,35 @@ void loop() {
       
     speed1 -= speed1 * kf; 
       
-      if ( (flag_sw2 == 1) && (digitalRead(PIN_P2) == 0) ) {
+    if ( (flag_sw2 == 1) && (digitalRead(PIN_P2) == 0) ) {
       flag_sw2 = 0;
       speed2 += ACEL;
     };
-      if ( (flag_sw2 == 0) && (digitalRead(PIN_P2) == 1) ) {
+
+    if ( (flag_sw2 == 0) && (digitalRead(PIN_P2) == 1) ) {
       flag_sw2 = 1;
     };
 
-      if ( (gravity_map[(word)dist2 % NPIXELS]) < 127) {
+    if ( (gravity_map[(word)dist2 % NPIXELS]) < 127) {
       speed2 -= kg * (127 - (gravity_map[(word)dist2 % NPIXELS]));
     };
 
-      if ( (gravity_map[(word)dist2 % NPIXELS]) > 127) {
+    if ( (gravity_map[(word)dist2 % NPIXELS]) > 127) {
       speed2 += kg * ((gravity_map[(word)dist2 % NPIXELS]) - 127);
     };
 
     speed2 -= speed2 * kf; 
         
-    if (loop1 <= loop_max) dist1 += speed1;
-      else{
-      
+    if (loop1 <= loop_max) 
+      dist1 += speed1;
+    else{
       updateTime(0, 1);
       finished1 = 1;
     } 
 
-    if (loop2 <= loop_max) dist2 += speed2;
-      else{
+    if (loop2 <= loop_max)
+      dist2 += speed2;
+    else{
       updateTime(1, 2);
       finished2 = 1;
     } 
@@ -562,23 +586,8 @@ void loop() {
     }
 
     if ((finished1 && finished2) || ((instantTime - ((timeWinner % 60000) / 1000)) >= 10)) {
-
       winner_fx();
-
-      loop1 = 0;
-      loop2 = 0;
-      dist1 = 0;
-      dist2 = 0;
-      speed1 = 0;
-      speed2 = 0;
-      timestamp = 0;
-      finished1 = 0;
-      finished2 = 0;
-      timeWinner = 0;
-      winner = 0;
-      instantTime = 0;
-      start_flag = 0;
-
+      finish_race();
     };
 
     if ((millis() & 512) == (512 * draworder)) {
@@ -588,7 +597,7 @@ void loop() {
       else {
         draworder=0;
       }   
-    }; 
+    } 
 
     if (draworder == 0) {
       if (!finished1) draw_car1();
@@ -626,8 +635,8 @@ void loop() {
         winner = 2;
       
       for(int i = 0; i < 3; i++){
-          track.setPixelColor(i, COLOR2);
-        }; 
+        track.setPixelColor(i, COLOR2);
+      }; 
     }
                   
     track.show(); 
