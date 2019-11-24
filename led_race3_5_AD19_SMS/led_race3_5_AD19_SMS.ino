@@ -24,6 +24,7 @@
                                                             
 #include <Adafruit_NeoPixel.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 
 #define MAXLED         300 // MAX LEDs actives on strip
 
@@ -65,6 +66,10 @@ float speed2 = 0;
 float dist1 = 0;
 float dist2 = 0;
 
+
+String buffer = "";
+boolean newData = false;
+
 // variaveis que controlam se um player terminou a corrida ou não
 byte finished1 = 0;
 byte finished2 = 0;
@@ -99,19 +104,89 @@ int tdelay = 5;
 
 // limpa o rank da EEPROM
 void clearRank(){
-	Serial.print("Entrei para limpar geral!\n");
+  char nome[7] = {'N', 'e', 'n', 'h', 'u', 'm', '\0'};
+  char tempo[7] = {'0', '0', ':', '0', '0', '.', '0'};
+  char data[10] = {'0', '0', '/', '0', '0', '/', '0', '0', '0', '0'};
+  
+  for (int i = 0; i < 10; i++){
+    for (int j = 0; j < 7; j++){
+        EEPROM.write(((50 * i) + j), nome[j]);
+        EEPROM.write((((50 * i) + 33) + j), tempo[j]);
+    }
+
+    for (int j = 0; j < 10; j++){
+      EEPROM.write((((50 * i) + 40) + j), data[j]);
+    }
+  
+  }
+  
+  Serial.print("Ranks Resetados!\n");
+}
+
+void listRank(){
+
+  // print(                                )
+  Serial.print("\n\tNome\t\t\t\t\tTempo\t\tData\n\n");
+  char aux = "";
+  for (int i = 0; i < 10; i++){
+    Serial.print(i+1); Serial.print("\t"); 
+    int k = 0;
+    while (EEPROM.read((50 * i) + k) != '\0'){
+      aux = EEPROM.read((50 * i) + k);
+        Serial.print(aux);
+        k++;
+    } 
+    Serial.print("\t\t\t\t\t");
+    for (int j = 0; j < 7; j++){
+    aux = EEPROM.read(((50 * i) + 33) + j);
+        Serial.print(aux);  
+    }
+
+    Serial.print("\t\t");
+  for (int j = 0; j < 10; j++){
+        aux = EEPROM.read(((50 * i) + 40) + j);
+        Serial.print(aux);  
+    }
+
+    Serial.print("\n"); 
+  }
+  
+  Serial.print("\n"); 
+  
+
 }
 
 // checa se tem caracter e toma a decisão que for necessária
-void checkEEPROM(){
+void checkSerialPort(){
+    char endMarker = '\n';
+    char rc;
+   
+    while (Serial.available() > 0 && newData == false) {
+        rc = Serial.read();
 
-	if (Serial.available()) { // Verificar se há caracteres disponíveis
-		char caractere = Serial.read();
+        if (rc != endMarker) {
+          buffer.concat(rc);
+        }
+        else {
+            newData = true; // avisa que tem uma nova palavra para ser processada
+        }
+    }
 
-		if (caractere == "clearRank"){
-			clearRank();
-		}
-	}
+
+  if (newData == true) {
+      Serial.print(buffer); Serial.print("\n"); 
+        if (buffer.equals("clearRank")){
+          clearRank();
+      }
+    else if (buffer.equals("listRank")){
+      listRank();
+    }
+    else{
+      Serial.print("Error! Nenuma opção válida foi digitada.\n");
+    }
+    buffer = "";
+        newData = false;
+    }
 }
 
 // escreve a estrutura do placar no LCD
@@ -391,6 +466,8 @@ void draw_car2(void){
 // ----------------------------------------------------------------------------------
 void loop() {
     //for(int i=0;i<NPIXELS;i++){track.setPixelColor(i, track.Color(0,0,0));};
+
+  checkSerialPort();
 
   // define o início da corrida quando o botão start for pressionado
   if(digitalRead(PIN_START) == 0){
