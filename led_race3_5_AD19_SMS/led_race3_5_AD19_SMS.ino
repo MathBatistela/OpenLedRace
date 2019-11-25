@@ -27,6 +27,7 @@
 #include <EEPROM.h>         // escreve e faz leituras na EEPROM
 #include <string.h>
 #include <ctype.h>
+#include <DS3231.h>
 
 #define MAXLED         300      // Máximo de Led's ativos
 
@@ -103,6 +104,7 @@ byte draworder = 0;
 unsigned long timestamp = 0;
 
 Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ800);
+DS3231 rtc(SDA, SCL);
 
 int tdelay = 5; 
 
@@ -616,6 +618,7 @@ int checkRecord(){
         records[i].nome[j] = EEPROM.read((50 * (i - 1)) + j);
         j++;
       } 
+      records[i].nome[j] = '\0';
     
       for (j = 0; j < 7; j++){
         records[i].record[j] = EEPROM.read(((50 * (i - 1)) + 33) + j);
@@ -663,7 +666,19 @@ void writeRecord(int actualRecord){
     records[actualRecord].record[i] = auxChar;
   }
   
-  // falta fazer a escrita do tempo do recorde
+  String auxData = rtc.getDateStr();
+
+  for (int i = 0; i < 10; i++){
+    auxChar = auxData[i];
+    
+    if (i == 2 || i == 5)
+      auxChar = '/';
+    else{
+      Serial.print("");
+    }
+    
+    records[actualRecord].data[i] = auxChar;
+  }
   
 }
 
@@ -694,8 +709,13 @@ void writeStructOnEEPROM(int actualRecord){
 // --------------------- Inicialização ---------------------
 void setup() {
     
-  Serial.begin(9600);       // abre a porta serial a 9600 bps
+    Serial.begin(9600);       // abre a porta serial a 9600 bps
     lcd.begin(16, 2);       // inicia o LCD 16x2
+    rtc.begin();      // aciona o relógio
+
+    
+    // rtc.setDate(25, 11, 2019); // setar a data do módulo
+
 
   // Configurações do TIMER1 
   TCCR1A = 0;                        // confira timer para operação normal pinos OC1A e OC1B desconectados
