@@ -37,20 +37,10 @@
 #define PIN_START      8        // pino do botão para começar a corrida
  
 
-int NPIXELS = MAXLED;         // leds na pista
+int NPIXELS = MAXLED;         // leds na pista 
 
 #define COLOR1    track.Color(0,255,0)      // cor do carro 1
 #define COLOR2    track.Color(255,0,0)      // cor do carro 2
-
-// estrutura de dados do record, utilizado para ver os 10 maiores recordes
-typedef struct record{
-  char nome[33];
-  char record[7];
-  char data[10];
-  unsigned long timeWinner = 0;
-}Record;
- 
-Record records[10];
 
 // notas tocadas, pelo buzzer, ao vencedor da corrida
 int win_music[] = {
@@ -113,6 +103,16 @@ unsigned long timestamp = 0;
 Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 int tdelay = 5; 
+
+// estrutura de dados do record, utilizado para ver os 10 maiores recordes
+typedef struct record{
+  char nome[33];
+  char record[7];
+  char data[10];
+  unsigned long timeWinner = 0;
+}Record;
+ 
+Record records[10];
 
 // ----------------- Protótipo das Funções -----------------
 
@@ -476,7 +476,7 @@ void draw_car2(){
 }
 
 // ---------------------------------------------------------
-void finish_race(){
+void finish_race(){ 
   loop1 = 0;
   loop2 = 0;
   dist1 = 0;
@@ -517,7 +517,6 @@ void fillRecordStruct(){
   int aux;
 
   for (i = 0; i < 10; i++){
-    char* p = records[i].record;
     records[i].timeWinner = 0;
     j = 0;
   
@@ -528,71 +527,67 @@ void fillRecordStruct(){
     
     for (j = 0; j < 7; j++){
         records[i].record[j] = EEPROM.read(((50 * i) + 33) + j);
-
-      for (int k = 0; k < j; k++){
-        aux = strtol(p, &p, 10);
-      }
-      
-      
-      // aux = atoi(records[i].record[j]);
+    
+    if (j != 2 && j != 5)
+      aux = records[i].record[j] - '0';
       
     
-      if (j == 0)
-        records[i].timeWinner = records[i].timeWinner + (aux * 600000);
-      if (j == 1)
-        records[i].timeWinner = records[i].timeWinner + (aux * 60000);
-      if (j == 3)
-        records[i].timeWinner = records[i].timeWinner + (aux * 10000);
-      if (j == 4)
-        records[i].timeWinner = records[i].timeWinner + (aux * 1000);
-      if (j == 6)
-        records[i].timeWinner = records[i].timeWinner + (aux * 100);
-      
-      Serial.print("j: ");  Serial.print(j); 
-      Serial.print(" records[i].record[j]: "); Serial.print(records[i].record[j]);  
-      Serial.print(" aux: "); Serial.print(aux);
-      Serial.print(" records[i].timeWinner: "); Serial.print(records[i].timeWinner); 
-      Serial.print("\n");     
-    }
-    Serial.print("\n"); 
+    if (j == 0)
+      records[i].timeWinner = records[i].timeWinner + (aux * 600000);
+    if (j == 1)
+      records[i].timeWinner = records[i].timeWinner + (aux * 60000);
+    if (j == 3)
+      records[i].timeWinner = records[i].timeWinner + (aux * 10000);
+    if (j == 4)
+      records[i].timeWinner = records[i].timeWinner + (aux * 1000);
+    if (j == 6)
+      records[i].timeWinner = records[i].timeWinner + (aux * 100);
+       
+      // Serial.print("j: ");  Serial.print(j);  
+      // Serial.print(" records[i].record[j]: "); Serial.print(records[i].record[j]);   
+      // Serial.print(" aux: "); Serial.print(aux); 
+      // Serial.print(" records[i].timeWinner: "); Serial.print(records[i].timeWinner);  
+      // Serial.print("\n");      
+    } 
+    // Serial.print("\n");  
 
     for (j = 0; j < 10; j++){
       records[i].data[j] = EEPROM.read(((50 * i) + 40) + j);
     }
   }
 
-      Serial.print("\n\tNome\t\t\t\t\tTempo\t\tData\n\n");
-      char auxChar;
+    //   Serial.print("\n\tNome\t\t\t\t\tTempo\t\tData\n\n");
+    //   char auxChar;
     
-    for (int i = 0; i < 10; i++){
-      Serial.print(i+1); Serial.print("\t"); 
-      int k = 0;
+    // for (int i = 0; i < 10; i++){
+    //   Serial.print(i+1); Serial.print("\t"); 
+    //   int k = 0;
     
-      while (records[i].nome[k] != '\0'){
-        auxChar = records[i].nome[k];
-        Serial.print(auxChar);
-        k++;
-      } 
+    //   while (records[i].nome[k] != '\0'){
+    //     auxChar = records[i].nome[k];
+    //     Serial.print(auxChar);
+    //     k++;
+    //   } 
     
-      Serial.print("\t\t\t\t\t");
-      for (int j = 0; j < 7; j++){
-        auxChar = records[i].record[j];
-        Serial.print(auxChar);  
-      }
+    //   Serial.print("\t\t\t\t\t");
+    //   for (int j = 0; j < 7; j++){
+    //     auxChar = records[i].record[j];
+    //     Serial.print(auxChar);  
+    //   }
 
-        Serial.print("\t\t");
-      for (int j = 0; j < 10; j++){
-        auxChar = records[i].data[j];
-        Serial.print(auxChar);  
-      }
+    //     Serial.print("\t\t");
+    //   for (int j = 0; j < 10; j++){
+    //     auxChar = records[i].data[j];
+    //     Serial.print(auxChar);  
+    //   }
 
-        Serial.print("\t"); 
+    //     Serial.print("\t"); 
 
-      Serial.print(records[i].timeWinner);
-        Serial.print("\n"); 
-      }
+    //   Serial.print(records[i].timeWinner);
+    //     Serial.print("\n"); 
+    //   }
   
-      Serial.print("\n");
+    //   Serial.print("\n");
   
 }
 
