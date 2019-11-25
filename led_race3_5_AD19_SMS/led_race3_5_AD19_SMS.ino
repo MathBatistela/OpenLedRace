@@ -60,6 +60,8 @@ int milSec = 0;                 // milisegundos da corrida
 int sec = 0;                  // segundos da corrida
 int minutes = 0;                // minutos da corrida
 
+int clear = 0;
+
 unsigned long timeWinner = 0;         // tempo do vencedor
 unsigned long instantTime = 0;          // variavél que controlorá o máximo de tempo que o segundo colocado poderá chegar após o vencedor
 
@@ -258,6 +260,7 @@ void checkSerialPort(){
 void writeScoreBoardLCD(){
 
   lcd.clear();        // limpando LCD
+  clear = 0;
 
   // escrevendo a estrutura do placar (coluna, linha)
     for (int i = 0; i < 2; i++){
@@ -435,7 +438,6 @@ void winner_fx(){
   }
 
 
-
   // acende toda a pista da cor do vencedor
   if (winner == 1){
     for(int i = 0; i < NPIXELS; i++){
@@ -598,7 +600,7 @@ int checkRecord(){
   int i, j;
 
   for (i = 0; i < 10; i++){
-      Serial.print("i: "); Serial.print(i); Serial.print("TimeWinner: "); Serial.print(records[i].timeWinner); Serial.print("\n");
+      // Serial.print("i: "); Serial.print(i); Serial.print("TimeWinner: "); Serial.print(records[i].timeWinner); Serial.print("\n");
       if (records[i].timeWinner == 0 || records[i].timeWinner > timeWinner){
         actualRecord = i; 
         break;
@@ -901,6 +903,10 @@ void loop() {
 
     }
   else{
+    if(clear == 0){
+      lcd.clear();
+      clear = 1;
+    }
     lcd.setCursor(5, 0);
     lcd.print("Press");
     lcd.setCursor(4, 1);
