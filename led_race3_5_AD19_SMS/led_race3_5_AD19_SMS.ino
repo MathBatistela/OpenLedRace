@@ -418,6 +418,33 @@ void start_race(){
 
 };
 
+
+void record_fx(int winner, int strobeCount, int flashDelay){
+
+  for(int i = 0; i < strobeCount; i++) {
+    if(winner == 1){
+      for(int i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, COLOR1);
+      }
+    }
+    else{
+      for(int i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, COLOR2);
+      }
+    }    
+    track.show();    
+    delay(flashDelay);
+
+    for(int i = 0; i < NPIXELS; i++){
+      track.setPixelColor(i, track.Color(0,0,0));
+    }
+
+    track.show();
+    delay(flashDelay);
+  }
+
+}
+
 // ---------------------------------------------------------
 void winner_fx(){
   int msize = sizeof(win_music) / sizeof(int);
@@ -441,18 +468,20 @@ void winner_fx(){
 
 
   // acende toda a pista da cor do vencedor
-  if (winner == 1){
-    for(int i = 0; i < NPIXELS; i++){
-      track.setPixelColor(i, COLOR1);
-    }; 
-  }
+  if (actualRecord == -1){
+    if (winner == 1){
+      for(int i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, COLOR1);
+      }; 
+    }
     else{
     for(int i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, COLOR2);
     }; 
     }
-
     track.show();
+  }
+  else record_fx(winner,5,1000);
   
   // toca a música do vencedor
   for (int note = 0; note < msize; note++) {
