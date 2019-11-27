@@ -61,7 +61,7 @@ int milSec = 0;                 // milisegundos da corrida
 int sec = 0;                  // segundos da corrida
 int minutes = 0;                // minutos da corrida
 
-int clear = 0;
+byte clear = 0;
 
 unsigned long timeWinner = 0;         // tempo do vencedor
 unsigned long instantTime = 0;          // variavél que controlorá o máximo de tempo que o segundo colocado poderá chegar após o vencedor
@@ -228,17 +228,13 @@ void checkSerialPort(){
     char rc;                  // caracter auxiliar para que seja concatenado no buffer
    
     while (Serial.available() > 0 && newData == false) {
-        rc = "";
         rc = Serial.read();           // lê caracter por caracter que foi enviado pelo porta serial
+        Serial.print(rc);
 
-        if (rc != endMarker){
+        if (rc != endMarker)
           buffer.concat(rc);          // concatena as letras do rc para formar uma string
-          Serial.print(buffer);
-        }
-        else{
-          Serial.print("Sai\n");
+        else
           newData = true;           // sinaliza que tem uma nova palavra para ser processada
-        } 
     }
 
 
@@ -252,11 +248,11 @@ void checkSerialPort(){
     else if (buffer.equals("listRank")){
       listRank();
     }
-      else{
-          Serial.print("Error! Nenuma opção válida foi digitada.\n");
-      }
+    else{
+        Serial.print("Error! Nenuma opção válida foi digitada.\n");
+    }
 
-      buffer = "";      // limpa o buffer
+      buffer = "ABC";      // limpa o buffer
       newData = false;    // sinaliza que a palavra já foi processada
     }
 }
