@@ -16,8 +16,8 @@
 
 int NPIXELS = MAXLED;         // leds na pista 
 
-#define COLOR1    track.Color(0,255,0)      // cor do carro 1
-#define COLOR2    track.Color(255,0,0)      // cor do carro 2
+#define COLOR1    track.Color(255,255,0)      // cor do carro 1
+#define COLOR2    track.Color(0,0,255)      // cor do carro 2
 
 // notas tocadas, pelo buzzer, ao vencedor da corrida
 int win_music[] = {
@@ -463,14 +463,14 @@ void record_fx(int winner, int strobeCount, int flashDelay){
 // ---------------------------------------------------------
 void draw_car1(){
   for(i = 0; i <= loop1; i++){
-    track.setPixelColor( ((word)dist1 % NPIXELS) + i, track.Color(0, 255 - i * 20, 0) );
+    track.setPixelColor( ((word)dist1 % NPIXELS) + i, COLOR1);
   };                   
 }
 
 // ---------------------------------------------------------
 void draw_car2(){
   for(i = 0;i <= loop2; i++){
-    track.setPixelColor(((word)dist2 % NPIXELS) + i, track.Color(255 - i * 20, 0, 0));
+    track.setPixelColor(((word)dist2 % NPIXELS) + i, COLOR2);
   };            
 }
 
