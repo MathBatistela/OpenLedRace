@@ -16,7 +16,7 @@
 
 int NPIXELS = MAXLED;         // leds na pista 
 
-#define COLOR1    track.Color(255,255,0)      // cor do carro 1
+#define COLOR1    track.Color(50,200,50)      // cor do carro 1
 #define COLOR2    track.Color(0,0,255)      // cor do carro 2
 
 // notas tocadas, pelo buzzer, ao vencedor da corrida
@@ -31,7 +31,7 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);      // configurando pinos do LCD
       
 byte  gravity_map[MAXLED];
 
-byte loop_max = 2;                // total de voltas da corrida
+byte loop_max = 1;                // total de voltas da corrida
 
 int milSec = 0;                 // milisegundos da corrida
 int sec = 0;                  // segundos da corrida
@@ -79,7 +79,8 @@ byte draworder = 0;
 
 int tdelay = 5; 
 
-char auxChar;
+char auxChar[2];
+int auxInt;
 
 int i, j;
 
@@ -91,6 +92,7 @@ DS3231 rtc(SDA, SCL);
 
 void clearRank();                 // limpa o rank da EEPROM
 void listRank();                  // lista o rank da EEPROM
+void writeName();                 // escreve seu nome em uma posição da EEPROM
 
 void checkSerialPort();               // checa se tem caracter na porta serial para serem processados e toma a decisão que for necessária
 
@@ -155,51 +157,139 @@ void clearRank(){
   
   }
 
-    Serial.print("Ranks Resetados!\n");
+    Serial.print(F("Ranks Resetados!\n"));
 }
 
 // ---------------------------------------------------------
 void listRank(){
 
-  Serial.print("\n\tNome\t\t\t\t\tTempo\t\tData\n\n");
+  Serial.print(F("\n\tNome\t\t\t\t\tTempo\t\tData\n\n"));
 
 
   for (i = 0; i < 10; i++){
-    Serial.print(i+1); Serial.print("\t"); 
+    Serial.print(i+1); Serial.print(F("\t")); 
     int k = 0;
     
     while (EEPROM.read((50 * i) + k) != '\0'){
-      auxChar = EEPROM.read((50 * i) + k);
-      Serial.print(auxChar);
+      auxChar[0] = EEPROM.read((50 * i) + k);
+      Serial.print(auxChar[0]);
       k++;
     } 
     
-    Serial.print("\t\t\t\t\t");
+    Serial.print(F("\t\t\t\t\t"));
     for (j = 0; j < 7; j++){
-      auxChar = EEPROM.read(((50 * i) + 33) + j);
-      Serial.print(auxChar);  
+      auxChar[0] = EEPROM.read(((50 * i) + 33) + j);
+      Serial.print(auxChar[0]);  
     }
 
-      Serial.print("\t\t");
+      Serial.print(F("\t\t"));
     for (j = 0; j < 10; j++){
-      auxChar = EEPROM.read(((50 * i) + 40) + j);
-      Serial.print(auxChar);  
+      auxChar[0] = EEPROM.read(((50 * i) + 40) + j);
+      Serial.print(auxChar[0]);  
     }
 
-      Serial.print("\n"); 
+      Serial.print(F("\n")); 
     }
   
-    Serial.print("\n");
+    Serial.print(F("\n"));
+}
+
+// ---------------------------------------------------------
+void writeName(){
+    
+    int auxI;
+    char auxC;
+
+    i = 0;
+    auxChar[0] = '\0';
+    auxChar[1] = '\0';
+    newData = false;
+    
+    Serial.print(F("Digite a posição do rank: "));
+
+    while (newData == false){
+      while (Serial.available() > 0){
+          auxC = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
+          if (auxC != '\n' && i < 2){
+            auxChar[i] = auxC;          // concatena as letras do rc para formar uma string
+            i++;
+          }
+          else
+            newData = true;           // sinaliza que tem uma nova palavra para ser processada
+
+      }
+    }
+
+
+    if (newData == true){
+      
+      auxI = atoi(auxChar);
+      Serial.print(auxI); Serial.print(F("\n"));
+
+
+      if (auxI > 10 || auxI < 1){
+        Serial.print(F("Posição inválida! Somente posições de 1 à 10 são aceitas!\n"));
+
+          while (Serial.available() > 0){
+            auxChar[0] = Serial.read();
+          }
+      }
+      else{
+        fillRecordStruct(auxI - 1);
+        if (instantTime == 0){
+          Serial.print(F("Posição inválida! Não há nenhum recorde nesta posição!\n")); 
+
+          while (Serial.available() > 0){
+            auxChar[0] = Serial.read();
+          }
+        }
+        else{
+          i = 0;
+          j = 1;
+
+          while (Serial.available() > 0){
+            auxChar[0] = Serial.read();
+          }
+
+          Serial.print(F("Digite o seu nome (máximo de 32 caracteres): "));
+          
+          while(j){
+            while (Serial.available() > 0 && i < 33){
+              auxChar[0] = Serial.read();
+              
+              if (auxChar[0] != '\n'){
+                Serial.print(auxChar[0]);
+                EEPROM.write(((50 * (auxI - 1)) + i), auxChar[0]);
+                i++;
+              }
+              else{
+                j = 0;
+              }
+
+            }
+
+          }
+
+          EEPROM.write(((50 * (auxI - 1)) + i), '\0');
+          Serial.print(F("\n\nNome Escrito com sucesso!\n"));
+
+          
+        }
+
+        
+      }
+    }
+     
 }
 
 // ---------------------------------------------------------
 void checkSerialPort(){
 
     while (Serial.available() > 0 && newData == false) {
-        auxChar = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
+        auxChar[0] = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
 
-        if (auxChar != '\n'){
-          buffer.concat(auxChar);          // concatena as letras do rc para formar uma string
+        if (auxChar[0] != '\n'){
+          buffer.concat(auxChar[0]);          // concatena as letras do rc para formar uma string
         }
         else
           newData = true;           // sinaliza que tem uma nova palavra para ser processada
@@ -207,7 +297,7 @@ void checkSerialPort(){
 
 
     if (newData == true) {
-        Serial.print(buffer); Serial.print("\n"); 
+        Serial.print(buffer); Serial.print(F("\n")); 
         
       // tomar decisão de acordo com o que estiver no buffer
       if (buffer.equals("clearRank")){
@@ -216,8 +306,15 @@ void checkSerialPort(){
       else if (buffer.equals("listRank")){
         listRank();
       }
+      else if (buffer.equals("writeName")){
+        writeName();
+      }
       else{
-          Serial.print("Error! Nenuma opção válida foi digitada.\n\n");
+          Serial.print(F("\nError! Nenuma opção válida foi digitada.\n"));
+          Serial.print(F("As opções são:\n\n"));
+          Serial.print(F("\"clearRank\" - para limpar todas as posições do rank\n"));
+          Serial.print(F("\"listRank\" - para listar os 10 corredores que terminaram mais rápido a corrida\n"));
+          Serial.print(F("\"writeName\" - para escrever seu nome em uma posição caso queria registrar sua vitória! =D\n\n"));
       }
 
       buffer = "";      // limpa o buffer
@@ -424,7 +521,7 @@ void winner_fx(){
     noTone(PIN_AUDIO);
   }
 
-  if (actualRecord == -1)
+  if (actualRecord != -1)
     record_fx(winner, 20, 100);
 
   delay(3000);
@@ -497,29 +594,28 @@ void finish_race(){
 
 // ---------------------------------------------------------
 void printInfoWinner(int player, int record){
-  Serial.print("Vencedor: Player "); Serial.print(player);
+  Serial.print(F("Vencedor: Player ")); Serial.print(player);
   if (record > 0 && record < 11){
-    Serial.print("\tRecorde batido! Posição: "); Serial.print(record);
+    Serial.print(F("\tRecorde batido! Posição: ")); Serial.print(record);
   }
   Serial.print("\n");
   
-  Serial.print("Tempo do vencedor: "); Serial.print(timeWinner);  Serial.print("\t");
-  Serial.print(timeWinner / 60000); Serial.print(":");                  // minutos
-  Serial.print((timeWinner % 60000) / 1000); Serial.print(".");             // segundos
-  Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print("\n\n");        // milisegundos
+  Serial.print(F("Tempo do vencedor: ")); Serial.print(timeWinner);  Serial.print(F("\t"));
+  Serial.print(timeWinner / 60000); Serial.print(F(":"));                  // minutos
+  Serial.print((timeWinner % 60000) / 1000); Serial.print(F("."));             // segundos
+  Serial.print(((timeWinner % 60000) % 1000) / 100); Serial.print(F("\n\n"));        // milisegundos
 }
 
 // ---------------------------------------------------------
 void fillRecordStruct(int pos){
 
     instantTime = 0; 
-    int auxInt;
     
     for (j = 0; j < 7; j++){
-      auxChar = EEPROM.read(((50 * pos) + 33) + j);
+      auxChar[0] = EEPROM.read(((50 * pos) + 33) + j);
 
       if (j != 2 && j != 5)
-        auxInt = auxChar - '0';
+        auxInt = auxChar[0] - '0';
       
     
       if (j == 0)
@@ -555,21 +651,21 @@ int checkRecord(){
         j = 0;
   
         while (EEPROM.read((50 * (i - 1)) + j) != '\0'){
-          auxChar = EEPROM.read((50 * (i - 1)) + j);
-          EEPROM.write((50 * i) + j, auxChar);
+          auxChar[0] = EEPROM.read((50 * (i - 1)) + j);
+          EEPROM.write((50 * i) + j, auxChar[0]);
           j++;
         } 
-        auxChar = '\0';
-        EEPROM.write((50 * i) + j, auxChar);
+        auxChar[0] = '\0';
+        EEPROM.write((50 * i) + j, auxChar[0]);
       
         for (j = 0; j < 7; j++){
-          auxChar = EEPROM.read(((50 * (i - 1)) + 33) + j);
-          EEPROM.write(((50 * i ) + 33) + j, auxChar);
+          auxChar[0] = EEPROM.read(((50 * (i - 1)) + 33) + j);
+          EEPROM.write(((50 * i ) + 33) + j, auxChar[0]);
         }
 
         for (j = 0; j < 10; j++){
-          auxChar = EEPROM.read(((50 * (i - 1)) + 40) + j);
-          EEPROM.write(((50 * i) + 40) + j, auxChar);
+          auxChar[0] = EEPROM.read(((50 * (i - 1)) + 40) + j);
+          EEPROM.write(((50 * i) + 40) + j, auxChar[0]);
         }
     
       }
@@ -591,30 +687,30 @@ void writeRecord(int actualRecord){
 
   for (i = 0; i < 7; i++){
     if (i == 0)
-      auxChar = (timeWinner / 600000) + '0';
+      auxChar[0] = (timeWinner / 600000) + '0';
     else if (i == 1)
-      auxChar = ((timeWinner % 600000) / 60000) + '0';
+      auxChar[0] = ((timeWinner % 600000) / 60000) + '0';
     else if (i == 2)
-     auxChar = ':';
+     auxChar[0] = ':';
     else if (i == 3)
-      auxChar = (((timeWinner % 600000) % 60000) / 10000) + '0';
+      auxChar[0] = (((timeWinner % 600000) % 60000) / 10000) + '0';
     else if (i == 4)
-      auxChar = ((((timeWinner % 600000) % 60000) % 10000) / 1000) + '0';
+      auxChar[0] = ((((timeWinner % 600000) % 60000) % 10000) / 1000) + '0';
     else if (i == 5)
-      auxChar = '.';
+      auxChar[0] = '.';
     else if (i == 6)
-      auxChar = (((((timeWinner % 600000) % 60000) % 10000) % 1000) / 100) + '0';
+      auxChar[0] = (((((timeWinner % 600000) % 60000) % 10000) % 1000) / 100) + '0';
 
-    EEPROM.write(((50 * actualRecord) + 33) + i, auxChar);
+    EEPROM.write(((50 * actualRecord) + 33) + i, auxChar[0]);
   }
 
   for (i = 0; i < 10; i++){
-    auxChar = rtc.getDateStr()[i];
+    auxChar[0] = rtc.getDateStr()[i];
     
     if (i == 2 || i == 5)
-      auxChar = '/';
+      auxChar[0] = '/';
     
-    EEPROM.write(((50 * actualRecord) + 40) + i, auxChar);
+    EEPROM.write(((50 * actualRecord) + 40) + i, auxChar[0]);
   }
   
 }
