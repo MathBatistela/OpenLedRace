@@ -82,9 +82,6 @@ unsigned long timestamp = 0;
 int tdelay = 5; 
 
 char auxChar;
-int auxInt;
-// char buffChar[2];
-
 
 int i, j;
 
@@ -96,7 +93,6 @@ DS3231 rtc(SDA, SCL);
 
 void clearRank();                 // limpa o rank da EEPROM
 void listRank();                  // lista o rank da EEPROM
-// void writeName();                 // escreve seu nome em uma posição da EEPROM
 
 void checkSerialPort();               // checa se tem caracter na porta serial para serem processados e toma a decisão que for necessária
 
@@ -199,61 +195,6 @@ void listRank(){
 }
 
 // ---------------------------------------------------------
-// void writeName(){
-//     i = 0;
-//     Serial.print("Digite a posição do rank: ");
-    
-//     while (Serial.available() == 0){}
-    
-//     while (Serial.available() > 0){
-//         auxChar = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
-
-//         if (auxChar != "\n"){
-//           buffChar[i] = auxChar;          // concatena as letras do rc para formar uma string
-//           i++;
-//         }
-//     }
-//       Serial.print(buffChar); Serial.print("\n"); 
-
-//      auxInt = atoi(buffChar);
-
-//      if (auxInt > 10 || auxInt < 1){
-//         Serial.print("Posição inválida! Somente posições de 1 à 10 são aceitas!\n");
-//         return;
-//      }
-//      else{
-//         fillRecordStruct(auxInt);
-//         if (instantTime == 0){
-//           Serial.print("Posição inválida! Não há nenhum recorde nesta posição!\n"); 
-//           return;
-//         }
-//         else{
-//           i = 0;
-//           Serial.print("Digite o seu nome (máximo de 32 caracteres): ");
-          
-//           while (Serial.available() == 0){}
-          
-//           while (Serial.available() > 0 && i < 33){
-//             auxChar = Serial.read();
-            
-//             if (auxChar != "\n"){
-//               Serial.print(auxChar);
-//               EEPROM.write(((50 * auxInt) + i), auxChar);
-
-//               i++;
-//             }
-
-//           }
-//           EEPROM.write(((50 * auxInt) + i), "\0");
-//           Serial.print("\n\nNome Escrito com sucesso!\n");
-//         }
-
-        
-//      }
-     
-// }
-
-// ---------------------------------------------------------
 void checkSerialPort(){
       char endMarker = '\n';            // caracter que delimitara o fim de uma palavra
       char rc;  
@@ -272,19 +213,16 @@ void checkSerialPort(){
     if (newData == true) {
         Serial.print(buffer); Serial.print("\n"); 
         
-    // tomar decisão de acordo com o que estiver no buffer
-    if (buffer.equals("clearRank")){
-            clearRank();
-        }
-    else if (buffer.equals("listRank")){
-      listRank();
-    }
-    // else if (buffer.equals("writeName")){
-    //   writeName();
-    // }
-    else{
-        Serial.print("Error! Nenuma opção válida foi digitada.\n\n");
-    }
+      // tomar decisão de acordo com o que estiver no buffer
+      if (buffer.equals("clearRank")){
+              clearRank();
+          }
+      else if (buffer.equals("listRank")){
+        listRank();
+      }
+      else{
+          Serial.print("Error! Nenuma opção válida foi digitada.\n\n");
+      }
 
       buffer = "";      // limpa o buffer
       newData = false;    // sinaliza que a palavra já foi processada
@@ -581,6 +519,7 @@ void printInfoWinner(int player, int record){
 void fillRecordStruct(int pos){
 
     instantTime = 0; 
+    int auxInt;
     
     for (j = 0; j < 7; j++){
       auxChar = EEPROM.read(((50 * pos) + 33) + j);
