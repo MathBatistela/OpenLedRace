@@ -1,27 +1,3 @@
-/*  
- * ____                     _      ______ _____    _____
-  / __ \                   | |    |  ____|  __ \  |  __ \               
- | |  | |_ __   ___ _ __   | |    | |__  | |  | | | |__) |__ _  ___ ___ 
- | |  | | '_ \ / _ \ '_ \  | |    |  __| | |  | | |  _  // _` |/ __/ _ \
- | |__| | |_) |  __/ | | | | |____| |____| |__| | | | \ \ (_| | (_|  __/
-  \____/| .__/ \___|_| |_| |______|______|_____/  |_|  \_\__,_|\___\___|
-        | |                                                             
-        |_|          
- Open LED Race
- An minimalist cars race for LED strip  
-  
- This program is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 3 of the License, or
- (at your option) any later version.
- by gbarbarov@singulardevices.com  for Arduino day Seville 2019 
- Code made dirty and fast, next improvements in: 
- https://github.com/gbarbarov/led-race
- https://www.hackster.io/gbarbarov/open-led-race-a0331a
- https://twitter.com/openledrace
-*/
-
-                                                            
 #include <Adafruit_NeoPixel.h>    // biblioteca para controle de pixels e faixas de LED baseados em fio único
 #include <LiquidCrystal.h>      // biblioteca para utilização do LCD
 #include <EEPROM.h>         // escreve e faz leituras na EEPROM
@@ -64,7 +40,7 @@ int minutes = 0;                // minutos da corrida
 byte clear = 0;
 
 unsigned long timeWinner = 0;         // tempo do vencedor
-unsigned long instantTime = 0;          // variavél que controlorá o máximo de tempo que o segundo colocado poderá chegar após o vencedor
+unsigned long instantTime = 0;        // variavél que controlorá o máximo de tempo que o segundo colocado poderá chegar após o vencedor
 
 int TBEEP = 3; 
 
@@ -103,24 +79,24 @@ byte draworder = 0;
  
 unsigned long timestamp = 0;
 
-Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ800);
-DS3231 rtc(SDA, SCL);
-
 int tdelay = 5; 
 
-// estrutura de dados do record, utilizado para ver os 10 maiores recordes
-typedef struct record{
-  // char record[7];
-  unsigned long timeWinner = 0;
-}Record;
- 
-Record records[10];
+char auxChar;
+int auxInt;
+// char buffChar[2];
+
+
+int i, j;
+
+Adafruit_NeoPixel track = Adafruit_NeoPixel(MAXLED, PIN_LED, NEO_GRB + NEO_KHZ800);
+DS3231 rtc(SDA, SCL);
 
 
 // ----------------- Protótipo das Funções -----------------
 
 void clearRank();                 // limpa o rank da EEPROM
 void listRank();                  // lista o rank da EEPROM
+// void writeName();                 // escreve seu nome em uma posição da EEPROM
 
 void checkSerialPort();               // checa se tem caracter na porta serial para serem processados e toma a decisão que for necessária
 
@@ -129,10 +105,11 @@ void updateTurn(int line, byte turn);       // atualiza as voltas no placar; lin
 void updateTime(int i);                   // atualiza o tempo da corrida no placar; i = linha do LCD(0 ou 1) ;
 
 void set_ramp(byte H, byte a, byte b, byte c);    // cria uma rampa no circuito
-void set_loop(byte H,byte a,byte b,byte c);       // cria um loop no circuito
+void set_loop(byte H, byte a, byte b, byte c);       // cria um loop no circuito
 
 void start_race();                  // rotina para começar uma corrida
 void winner_fx();                   // rotina do vencedor da corrida
+void record_fx(int winner, int strobeCount, int flashDelay); // pisca o Led todo com a cor do vencedor caso ele tenha batido um recorde
 
 void draw_car1();                 // rotina de desenho do carro do player 1
 void draw_car2();                   // rotina de desenho do carro do player 2
@@ -141,7 +118,7 @@ void finish_race();                 // rotina de finalização de uma corrida
 
 void printInfoWinner(int player, int record);   // mostra na porta serial as informações do vencedor da corrida; player = jogador vencedor; record = se o jogador bateu um recorde e se sim, qual a posição;
 
-void fillRecordStruct();              // prenche a estruta de records para que possa ser utilizada para checar novos records   
+void fillRecordStruct(int pos);              // prenche a estruta de records para que possa ser utilizada para checar novos records   
 int checkRecord();            // checa se o vencedor bateu algum recorde, se bateu é escrito o recorde na posição correta da struct e na EEPROM; O retorno deve ser a poição do recorde se houver, ou 0 casa o não haja recorde.   
 void writeRecord(int Actualrecord);   // escreve na posição do recorde, os dados do recorde na struct; actualRecord = posição que o novo dado entrará na struct 
 
@@ -172,19 +149,18 @@ void clearRank(){
   char tempo[7] = {'0', '0', ':', '0', '0', '.', '0'};
   char data[10] = {'0', '0', '/', '0', '0', '/', '0', '0', '0', '0'};
   
-  for (int i = 0; i < 10; i++){
-    for (int j = 0; j < 7; j++){
+  for (i = 0; i < 10; i++){
+    for (j = 0; j < 7; j++){
       EEPROM.write(((50 * i) + j), nome[j]);
       EEPROM.write((((50 * i) + 33) + j), tempo[j]);
     }
 
-    for (int j = 0; j < 10; j++){
+    for (j = 0; j < 10; j++){
       EEPROM.write((((50 * i) + 40) + j), data[j]);
     }
   
   }
-  
-    fillRecordStruct();
+
     Serial.print("Ranks Resetados!\n");
 }
 
@@ -192,28 +168,28 @@ void clearRank(){
 void listRank(){
 
   Serial.print("\n\tNome\t\t\t\t\tTempo\t\tData\n\n");
-    char aux;
-    
-  for (int i = 0; i < 10; i++){
+
+
+  for (i = 0; i < 10; i++){
     Serial.print(i+1); Serial.print("\t"); 
     int k = 0;
     
     while (EEPROM.read((50 * i) + k) != '\0'){
-      aux = EEPROM.read((50 * i) + k);
-      Serial.print(aux);
+      auxChar = EEPROM.read((50 * i) + k);
+      Serial.print(auxChar);
       k++;
     } 
     
     Serial.print("\t\t\t\t\t");
-    for (int j = 0; j < 7; j++){
-      aux = EEPROM.read(((50 * i) + 33) + j);
-      Serial.print(aux);  
+    for (j = 0; j < 7; j++){
+      auxChar = EEPROM.read(((50 * i) + 33) + j);
+      Serial.print(auxChar);  
     }
 
       Serial.print("\t\t");
-    for (int j = 0; j < 10; j++){
-      aux = EEPROM.read(((50 * i) + 40) + j);
-      Serial.print(aux);  
+    for (j = 0; j < 10; j++){
+      auxChar = EEPROM.read(((50 * i) + 40) + j);
+      Serial.print(auxChar);  
     }
 
       Serial.print("\n"); 
@@ -223,16 +199,71 @@ void listRank(){
 }
 
 // ---------------------------------------------------------
-void checkSerialPort(){
-    char endMarker = '\n';            // caracter que delimitara o fim de uma palavra
-    char rc;                  // caracter auxiliar para que seja concatenado no buffer
-   
-    while (Serial.available() > 0 && newData == false) {
-        rc = Serial.read();           // lê caracter por caracter que foi enviado pelo porta serial
-        Serial.print(rc);
+// void writeName(){
+//     i = 0;
+//     Serial.print("Digite a posição do rank: ");
+    
+//     while (Serial.available() == 0){}
+    
+//     while (Serial.available() > 0){
+//         auxChar = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
 
-        if (rc != endMarker)
+//         if (auxChar != "\n"){
+//           buffChar[i] = auxChar;          // concatena as letras do rc para formar uma string
+//           i++;
+//         }
+//     }
+//       Serial.print(buffChar); Serial.print("\n"); 
+
+//      auxInt = atoi(buffChar);
+
+//      if (auxInt > 10 || auxInt < 1){
+//         Serial.print("Posição inválida! Somente posições de 1 à 10 são aceitas!\n");
+//         return;
+//      }
+//      else{
+//         fillRecordStruct(auxInt);
+//         if (instantTime == 0){
+//           Serial.print("Posição inválida! Não há nenhum recorde nesta posição!\n"); 
+//           return;
+//         }
+//         else{
+//           i = 0;
+//           Serial.print("Digite o seu nome (máximo de 32 caracteres): ");
+          
+//           while (Serial.available() == 0){}
+          
+//           while (Serial.available() > 0 && i < 33){
+//             auxChar = Serial.read();
+            
+//             if (auxChar != "\n"){
+//               Serial.print(auxChar);
+//               EEPROM.write(((50 * auxInt) + i), auxChar);
+
+//               i++;
+//             }
+
+//           }
+//           EEPROM.write(((50 * auxInt) + i), "\0");
+//           Serial.print("\n\nNome Escrito com sucesso!\n");
+//         }
+
+        
+//      }
+     
+// }
+
+// ---------------------------------------------------------
+void checkSerialPort(){
+      char endMarker = '\n';            // caracter que delimitara o fim de uma palavra
+      char rc;  
+
+    while (Serial.available() > 0 && newData == false) {
+        rc = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
+
+        if (rc != endMarker){
           buffer.concat(rc);          // concatena as letras do rc para formar uma string
+        }
         else
           newData = true;           // sinaliza que tem uma nova palavra para ser processada
     }
@@ -248,11 +279,14 @@ void checkSerialPort(){
     else if (buffer.equals("listRank")){
       listRank();
     }
+    // else if (buffer.equals("writeName")){
+    //   writeName();
+    // }
     else{
-        Serial.print("Error! Nenuma opção válida foi digitada.\n");
+        Serial.print("Error! Nenuma opção válida foi digitada.\n\n");
     }
 
-      buffer = "ABC";      // limpa o buffer
+      buffer = "";      // limpa o buffer
       newData = false;    // sinaliza que a palavra já foi processada
     }
 }
@@ -264,7 +298,7 @@ void writeScoreBoardLCD(){
   clear = 0;
 
   // escrevendo a estrutura do placar (coluna, linha)
-    for (int i = 0; i < 2; i++){
+    for (i = 0; i < 2; i++){
         // escrevendo players
     lcd.setCursor(0, i);
     lcd.print("P");
@@ -337,7 +371,7 @@ void updateTime(int i){
 void set_ramp(byte H, byte a, byte b, byte c){
 
   // Gravidade de subida entre o começo e o topo da rampa
-  for(int i = 0; i < (b - a); i++){
+  for(i = 0; i < (b - a); i++){
     gravity_map[a + i] = 127 - i * ( (float)H / (b - a));
   };
 
@@ -345,7 +379,7 @@ void set_ramp(byte H, byte a, byte b, byte c){
   gravity_map[b] = 127; 
   
   // Gravidade de decida entre o topo da rampa e o fim da rampa
-  for(int i = 0; i < (c - b); i++){
+  for(i = 0; i < (c - b); i++){
     gravity_map[b + i + 1] = 127 + H - i * ((float)H / (c - b));
   };
 }
@@ -354,7 +388,7 @@ void set_ramp(byte H, byte a, byte b, byte c){
 void set_loop(byte H,byte a,byte b,byte c){
     
   // Gravidade de subida entre o começo e o topo do loop
-  for(int i = 0; i < (b - a); i++){
+  for(i = 0; i < (b - a); i++){
         gravity_map[a + i]= 127 - i * ( (float)H / (b - a));
     };
     
@@ -362,7 +396,7 @@ void set_loop(byte H,byte a,byte b,byte c){
     gravity_map[b] = 255; 
 
   // Gravidade de decida entre o topo do loop e o fim do loop
-    for(int i = 0; i < (c - b); i++){
+    for(i = 0; i < (c - b); i++){
       gravity_map[b + i + 1] = 127 + H - i * ( (float)H / (c - b));
     };
 }
@@ -438,18 +472,22 @@ void winner_fx(){
 
 
   // acende toda a pista da cor do vencedor
-  if (winner == 1){
-    for(int i = 0; i < NPIXELS; i++){
-      track.setPixelColor(i, COLOR1);
-    }; 
-  }
+  if (actualRecord == -1){
+    if (winner == 1){
+      for(i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, COLOR1);
+      }; 
+    }
     else{
-    for(int i = 0; i < NPIXELS; i++){
+    for(i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, COLOR2);
     }; 
     }
-
     track.show();
+  }
+  else {
+    record_fx(winner, 5, 1000);
+  }
   
   // toca a música do vencedor
   for (int note = 0; note < msize; note++) {
@@ -463,15 +501,42 @@ void winner_fx(){
 };
 
 // ---------------------------------------------------------
+void record_fx(int winner, int strobeCount, int flashDelay){
+
+  for(i = 0; i < strobeCount; i++) {
+    if(winner == 1){
+      for(i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, COLOR1);
+      }
+    }
+    else{
+      for(i = 0; i < NPIXELS; i++){
+        track.setPixelColor(i, COLOR2);
+      }
+    }    
+    track.show();    
+    delay(flashDelay);
+
+    for(i = 0; i < NPIXELS; i++){
+      track.setPixelColor(i, track.Color(0,0,0));
+    }
+
+    track.show();
+    delay(flashDelay);
+  }
+
+}
+
+// ---------------------------------------------------------
 void draw_car1(){
-  for(int i = 0; i <= loop1; i++){
+  for(i = 0; i <= loop1; i++){
     track.setPixelColor( ((word)dist1 % NPIXELS) + i, track.Color(0, 255 - i * 20, 0) );
   };                   
 }
 
 // ---------------------------------------------------------
 void draw_car2(){
-  for(int i = 0;i <= loop2; i++){
+  for(i = 0;i <= loop2; i++){
     track.setPixelColor(((word)dist2 % NPIXELS) + i, track.Color(255 - i * 20, 0, 0));
   };            
 }
@@ -492,7 +557,7 @@ void finish_race(){
   instantTime = 0;
   start_flag = 0;
 
-  for(int i = 0; i < NPIXELS; i++){
+  for(i = 0; i < NPIXELS; i++){
     track.setPixelColor(i, track.Color(0, 0, 0));
   };
 
@@ -513,41 +578,27 @@ void printInfoWinner(int player, int record){
 }
 
 // ---------------------------------------------------------
-void fillRecordStruct(){
-  int j, i;
-  int aux;
-  char recordTimeWinner[7];
+void fillRecordStruct(int pos){
 
-  for (i = 0; i < 10; i++){
-    records[i].timeWinner = 0;
-    j = 0;
-  
+    instantTime = 0; 
     
     for (j = 0; j < 7; j++){
-      recordTimeWinner[j] = EEPROM.read(((50 * i) + 33) + j);
+      auxChar = EEPROM.read(((50 * pos) + 33) + j);
 
       if (j != 2 && j != 5)
-        aux = recordTimeWinner[j] - '0';
+        auxInt = auxChar - '0';
       
     
       if (j == 0)
-        records[i].timeWinner = records[i].timeWinner + (aux * 600000);
+        instantTime = instantTime + (auxInt * 600000);
       if (j == 1)
-        records[i].timeWinner = records[i].timeWinner + (aux * 60000);
+        instantTime = instantTime + (auxInt * 60000);
       if (j == 3)
-        records[i].timeWinner = records[i].timeWinner + (aux * 10000);
+        instantTime = instantTime + (auxInt * 10000);
       if (j == 4)
-        records[i].timeWinner = records[i].timeWinner + (aux * 1000);
+        instantTime = instantTime + (auxInt * 1000);
       if (j == 6)
-        records[i].timeWinner = records[i].timeWinner + (aux * 100);
-       
-      // Serial.print("j: ");  Serial.print(j);  
-      // Serial.print(" records[i].record[j]: "); Serial.print(records[i].record[j]);   
-      // Serial.print(" aux: "); Serial.print(aux); 
-      // Serial.print(" records[i].timeWinner: "); Serial.print(records[i].timeWinner);  
-      // Serial.print("\n");      
-    } 
-    // Serial.print("\n");  
+        instantTime = instantTime + (auxInt * 100); 
   }
   
 }
@@ -556,15 +607,10 @@ void fillRecordStruct(){
 int checkRecord(){
 
   int actualRecord = -1;
-  int i, j;
-
-  char auxNome[33];
-  char auxTime[7];
-  char auxData[10];
 
   for (i = 0; i < 10; i++){
-      // Serial.print("i: "); Serial.print(i); Serial.print("TimeWinner: "); Serial.print(records[i].timeWinner); Serial.print("\n");
-      if (records[i].timeWinner == 0 || records[i].timeWinner > timeWinner){
+      fillRecordStruct(i);
+      if (instantTime == 0 || instantTime > timeWinner){
         actualRecord = i; 
         break;
       }
@@ -576,27 +622,26 @@ int checkRecord(){
         j = 0;
   
         while (EEPROM.read((50 * (i - 1)) + j) != '\0'){
-          auxNome[j] = EEPROM.read((50 * (i - 1)) + j);
-          EEPROM.write((50 * i) + j, auxNome[j]);
+          auxChar = EEPROM.read((50 * (i - 1)) + j);
+          EEPROM.write((50 * i) + j, auxChar);
           j++;
         } 
-        auxNome[j] = '\0';
-        EEPROM.write((50 * i) + j, auxNome[j]);
+        auxChar = '\0';
+        EEPROM.write((50 * i) + j, auxChar);
       
         for (j = 0; j < 7; j++){
-          auxTime[j] = EEPROM.read(((50 * (i - 1)) + 33) + j);
-          EEPROM.write(((50 * i ) + 33) + j, auxTime[j]);
+          auxChar = EEPROM.read(((50 * (i - 1)) + 33) + j);
+          EEPROM.write(((50 * i ) + 33) + j, auxChar);
         }
 
         for (j = 0; j < 10; j++){
-          auxData[j] = EEPROM.read(((50 * (i - 1)) + 40) + j);
-          EEPROM.write(((50 * i) + 40) + j, auxData[j]);
+          auxChar = EEPROM.read(((50 * (i - 1)) + 40) + j);
+          EEPROM.write(((50 * i) + 40) + j, auxChar);
         }
     
       }
 
       writeRecord(actualRecord);
-      fillRecordStruct();
     }
 
   return actualRecord;
@@ -605,14 +650,13 @@ int checkRecord(){
 // ---------------------------------------------------------
 void writeRecord(int actualRecord){
   char newNome[13] = {'D', 'e', 's', 'c', 'o', 'n', 'h', 'e', 'c', 'i', 'd', 'o', '\0'};
-  char auxChar;
 
   // escrecendo na posição do recorde batido os novos valores
-  for (int i = 0; i < 13; i++){
+  for (i = 0; i < 13; i++){
     EEPROM.write((50 * actualRecord) + i, newNome[i]);
   }
 
-  for (int i = 0; i < 7; i++){
+  for (i = 0; i < 7; i++){
     if (i == 0)
       auxChar = (timeWinner / 600000) + '0';
     else if (i == 1)
@@ -630,11 +674,9 @@ void writeRecord(int actualRecord){
 
     EEPROM.write(((50 * actualRecord) + 33) + i, auxChar);
   }
-  
-  String auxData = rtc.getDateStr();
 
-  for (int i = 0; i < 10; i++){
-    auxChar = auxData[i];
+  for (i = 0; i < 10; i++){
+    auxChar = rtc.getDateStr()[i];
     
     if (i == 2 || i == 5)
       auxChar = '/';
@@ -653,21 +695,21 @@ void setup() {
     rtc.begin();      // aciona o relógio
 
     
-    // rtc.setDate(25, 11, 2019); // setar a data do módulo
+    // rtc.setDate(29, 11, 2019); // setar a data do módulo
 
 
-  // Configurações do TIMER1 
-  TCCR1A = 0;                        // confira timer para operação normal pinos OC1A e OC1B desconectados
-  TCCR1B = 0;                        // limpa registrador
-  TCCR1B |= (1<<CS10)|(1 << CS12);   // configura prescaler para 1024: CS12 = 1 e CS10 = 1
-  
-  TCNT1 = 0xC2F7;                    // incia timer com valor para que estouro ocorra em 1 segundo 65536-(16MHz/1024/1Hz) = 49911 = 0xC2F7
-  
-  TIMSK1 |= (1 << TOIE1);           // habilita a interrupção do TIMER1
+    // Configurações do TIMER1 
+    TCCR1A = 0;                        // confira timer para operação normal pinos OC1A e OC1B desconectados
+    TCCR1B = 0;                        // limpa registrador
+    TCCR1B |= (1<<CS10)|(1 << CS12);   // configura prescaler para 1024: CS12 = 1 e CS10 = 1
+    
+    TCNT1 = 0xC2F7;                    // incia timer com valor para que estouro ocorra em 1 segundo 65536-(16MHz/1024/1Hz) = 49911 = 0xC2F7
+    
+    TIMSK1 |= (1 << TOIE1);           // habilita a interrupção do TIMER1
 
 
     // iniciando a gravidade em todos os leds da pista
-    for(int i = 0; i < NPIXELS; i++){
+    for(i = 0; i < NPIXELS; i++){
     gravity_map[i] = 127;
     };
     
@@ -684,15 +726,12 @@ void setup() {
        set_ramp(12,90,100,110);
       
     // colocar a cor na rampa de acordo com a gravidade
-    for(int i= 0; i < NPIXELS; i++){
+    for(i= 0; i < NPIXELS; i++){
       track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
     };
 
         track.show();
     };
-
-  // preenche a struct
-  fillRecordStruct();
 
 }
 
@@ -715,11 +754,11 @@ void loop() {
     if(start_flag){
 
     // atualizando tesmpos de todos os players
-    for (int i = 0; i < 2; i++){
+    for (i = 0; i < 2; i++){
       updateTime(i);
     }
 
-    for(int i = 0; i < NPIXELS; i++){
+    for(i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, track.Color(0, 0, (127 - gravity_map[i]) / 8));
     };
     
@@ -833,7 +872,7 @@ void loop() {
       }
       winner = 1;
 
-      for(int i = 0; i < 3; i++){
+      for(i = 0; i < 3; i++){
         track.setPixelColor(i, COLOR1);
       }; 
     }
@@ -843,7 +882,7 @@ void loop() {
       }
       winner = 2;
       
-      for(int i = 0; i < 3; i++){
+      for(i = 0; i < 3; i++){
         track.setPixelColor(i, COLOR2);
       }; 
     }
