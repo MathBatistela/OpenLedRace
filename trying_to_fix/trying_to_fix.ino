@@ -404,30 +404,28 @@ void winner_fx(){
 
 
   // acende toda a pista da cor do vencedor
-  if (actualRecord == -1){
-    if (winner == 1){
-      for(i = 0; i < NPIXELS; i++){
-        track.setPixelColor(i, COLOR1);
-      }; 
-    }
-    else{
+
+  if (winner == 1){
     for(i = 0; i < NPIXELS; i++){
-      track.setPixelColor(i, COLOR2);
+      track.setPixelColor(i, COLOR1);
     }; 
-    }
+  }
+  else{
+  for(i = 0; i < NPIXELS; i++){
+    track.setPixelColor(i, COLOR2);
+  }; 
+  }
     track.show();
-  }
-  else {
-    record_fx(winner, 30, 100);
-  }
-  
-  delay(1);
+
   // toca a música do vencedor
   for (i = 0; i < msize; i++) {
     tone(PIN_AUDIO, win_music[i], 200);
     delay(230);
     noTone(PIN_AUDIO);
   }
+
+  if (actualRecord == -1)
+    record_fx(winner, 20, 100);
 
   delay(3000);
   lcd.clear();                                             
