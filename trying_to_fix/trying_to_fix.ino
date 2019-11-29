@@ -418,7 +418,7 @@ void winner_fx(){
     track.show();
   }
   else {
-    record_fx(winner, 5, 500);
+    record_fx(winner, 30, 100);
   }
   
   // toca a música do vencedor
