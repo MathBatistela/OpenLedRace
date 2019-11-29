@@ -76,9 +76,7 @@ float kg = 0.003;                 // constante de gravidade
 byte flag_sw1 = 0;
 byte flag_sw2 = 0;
 byte draworder = 0;
- 
-unsigned long timestamp = 0;
-l
+
 int tdelay = 5; 
 
 char auxChar;
@@ -196,14 +194,12 @@ void listRank(){
 
 // ---------------------------------------------------------
 void checkSerialPort(){
-      char endMarker = '\n';            // caracter que delimitara o fim de uma palavra
-      char rc;  
 
     while (Serial.available() > 0 && newData == false) {
-        rc = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
+        auxChar = Serial.read();            // lê caracter por caracter que foi enviado pelo porta serial
 
-        if (rc != endMarker){
-          buffer.concat(rc);          // concatena as letras do rc para formar uma string
+        if (auxChar != '\n'){
+          buffer.concat(auxChar);          // concatena as letras do rc para formar uma string
         }
         else
           newData = true;           // sinaliza que tem uma nova palavra para ser processada
@@ -377,9 +373,7 @@ void start_race(){
 
   tone(PIN_AUDIO,1200);
   delay(2000);
-  noTone(PIN_AUDIO);     
-
-  timestamp = 0;              
+  noTone(PIN_AUDIO);               
   
   milSec = 0;
   sec = 0;
@@ -424,12 +418,12 @@ void winner_fx(){
     track.show();
   }
   else {
-    record_fx(winner, 5, 100);
+    record_fx(winner, 5, 500);
   }
   
   // toca a música do vencedor
-  for (int note = 0; note < msize; note++) {
-    tone(PIN_AUDIO, win_music[note], 200);
+  for (i = 0; i < msize; i++) {
+    tone(PIN_AUDIO, win_music[i], 200);
     delay(230);
     noTone(PIN_AUDIO);
   }
@@ -441,7 +435,7 @@ void winner_fx(){
 // ---------------------------------------------------------
 void record_fx(int winner, int strobeCount, int flashDelay){
 
-  for(i = 0; i < strobeCount; i++) {
+  for(j = 0; j < strobeCount; j++) {
     if(winner == 1){
       for(i = 0; i < NPIXELS; i++){
         track.setPixelColor(i, COLOR1);
@@ -460,6 +454,9 @@ void record_fx(int winner, int strobeCount, int flashDelay){
       track.setPixelColor(i, track.Color(0,0,0));
     }
     track.show();
+
+    delay(flashDelay);
+
   }
 
 }
@@ -486,7 +483,6 @@ void finish_race(){
   dist2 = 0;
   speed1 = 0;
   speed2 = 0;
-  timestamp = 0;
   finished1 = 0;
   finished2 = 0;
   timeWinner = 0;

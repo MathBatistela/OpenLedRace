@@ -108,14 +108,16 @@ DS3231 rtc(SDA, SCL);
 
 int tdelay = 5; 
 
-// estrutura de dados do record, utilizado para ver os 10 maiores recordes
-typedef struct record{
-  char nome[33];
-  char record[7];
-  char data[10];
-  unsigned long timeWinner = 0;
-}Record;
- 
+estrutura de dados do record, utilizado para ver os 10 maiores recordes
+struct record{
+ char nome[33];
+ char record[7];
+ char data[10];
+ unsigned long timeWinner = 0;
+};
+
+typedef struct record Record;
+
 Record records[10];
 
 // ----------------- Protótipo das Funções -----------------
