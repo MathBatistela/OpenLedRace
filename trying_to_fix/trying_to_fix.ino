@@ -421,6 +421,7 @@ void winner_fx(){
     record_fx(winner, 30, 100);
   }
   
+  delay(1);
   // toca a música do vencedor
   for (i = 0; i < msize; i++) {
     tone(PIN_AUDIO, win_music[i], 200);
