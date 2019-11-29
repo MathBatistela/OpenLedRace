@@ -78,7 +78,7 @@ byte flag_sw2 = 0;
 byte draworder = 0;
  
 unsigned long timestamp = 0;
-
+l
 int tdelay = 5; 
 
 char auxChar;
@@ -424,7 +424,7 @@ void winner_fx(){
     track.show();
   }
   else {
-    record_fx(winner, 5, 1000);
+    record_fx(winner, 5, 100);
   }
   
   // toca a música do vencedor
@@ -452,15 +452,14 @@ void record_fx(int winner, int strobeCount, int flashDelay){
         track.setPixelColor(i, COLOR2);
       }
     }    
-    track.show();    
+    track.show();
+
     delay(flashDelay);
 
     for(i = 0; i < NPIXELS; i++){
       track.setPixelColor(i, track.Color(0,0,0));
     }
-
     track.show();
-    delay(flashDelay);
   }
 
 }
