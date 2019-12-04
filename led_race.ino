@@ -31,7 +31,7 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);      // configurando pinos do LCD
       
 byte  gravity_map[MAXLED];
 
-byte loop_max = 1;                          // total de voltas da corrida
+byte loop_max = 5;                          // total de voltas da corrida
 
 int milSec = 0;                             // milisegundos da corrida
 int sec = 0;                                // segundos da corrida
